@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Monitor</string>
+    <string name="not_a_data">нет данных</string>
+    <string name="general_run">Общий пробег</string>
+    <string name="run">Пробег</string>
+    <string name="engine_temperature">Температура на ИЭП</string>
+    <string name="can_state">Состояние CAN</string>
+</resources>

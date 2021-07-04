@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:title="Главная"
+        android:id="@+id/mainMenuItem"/>
+
+    <item
+        android:title="Настройки"
+        android:id="@+id/settingsMenuItem"/>
+
+    <item
+        android:title="Об устройстве"
+        android:id="@+id/infoMenuItem"/>
+</menu>

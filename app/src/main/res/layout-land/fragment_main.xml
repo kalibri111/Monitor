@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainFragment">
+
+
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:columnCount="6"
+        android:rowCount="3"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/speedIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1"/>
+
+            <TextView
+                android:id="@+id/lightIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:text="Light On"/>
+
+            <TextView
+                android:id="@+id/lockIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:text="Locked"/>
+
+            <TextView
+                android:id="@+id/ABSASRIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:text="ABS"/>
+
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_columnSpan="4"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1">
+
+            <com.github.anastr.speedviewlib.PointerSpeedometer
+                android:id="@+id/currentView"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_centerHorizontal="true"
+                app:sv_backgroundCircleColor="@color/white"
+                app:sv_endDegree="400"
+                app:sv_indicator="NeedleIndicator"
+                app:sv_indicatorColor="@android:color/holo_red_dark"
+                app:sv_speedTextColor="@android:color/holo_red_dark"
+                app:sv_speedTextFormat="INTEGER"
+                app:sv_speedTextPosition="TOP_CENTER"
+                app:sv_speedTextSize="10sp"
+                app:sv_speedometerColor="@android:color/black"
+                app:sv_startDegree="140"
+                app:sv_textColor="@color/black"
+                app:sv_unit="А"
+                app:sv_unitTextColor="@color/black" />
+
+            <com.github.anastr.speedviewlib.AwesomeSpeedometer
+                android:id="@+id/speedView"
+                android:layout_width="240dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/currentView"
+                android:layout_centerHorizontal="true"
+                app:sv_backgroundCircleColor="@color/white"
+                app:sv_indicator="NeedleIndicator"
+                app:sv_indicatorColor="@android:color/holo_red_dark"
+                app:sv_speedTextColor="@android:color/holo_red_dark"
+                app:sv_speedTextFormat="INTEGER"
+                app:sv_speedTextPosition="BOTTOM_CENTER"
+                app:sv_speedometerColor="@android:color/black"
+                app:sv_speedometerMode="TOP"
+                app:sv_textColor="@color/black"
+                app:sv_unit="км/ч"
+                app:sv_unitTextColor="@color/black" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1">
+
+            <Button
+                android:id="@+id/ASRButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ASR" />
+
+            <Button
+                android:id="@+id/ABSButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="ABS" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill"
+            android:layout_columnSpan="6"
+            android:gravity="left|center">
+
+            <TextView
+                android:id="@+id/chargeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Заряд"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/chargeText"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layoutDirection="rtl"
+                android:mirrorForRtl="true"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:paddingBottom="10dp"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_columnSpan="6"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/additionalInfoText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp"
+                android:text="Доп. инфо:"/>
+
+            <TextView
+                android:id="@+id/additionalInfoValue"
+                android:layout_width="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_height="wrap_content"
+                android:text="Выберете нужный параметр справа"/>
+
+        </LinearLayout>
+
+    </GridLayout>
+
+</FrameLayout>

@@ -20,6 +20,15 @@ import android.widget.TextView;
  */
 public class MainFragment extends Fragment {
 
+    View fragmentAdditionalInfoView;
+
+    View.OnClickListener fragmentAdditionalOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            showPopupMenu(v);
+        }
+    };
+
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -64,8 +73,44 @@ public class MainFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_main, container, false);
+        View view = inflater.inflate(R.layout.fragment_main, container, false);
+
+        fragmentAdditionalInfoView = view.findViewById(R.id.additionalInfoText);
+        fragmentAdditionalInfoView.setOnClickListener(fragmentAdditionalOnClickListener);
+
+        return view;
     }
 
 
+    private void showPopupMenu(View v) {
+        PopupMenu popupMenu = new PopupMenu(getContext(), v);
+        popupMenu.inflate(R.menu.popup_on_main_menu);
+
+        TextView optionalIndicator = getView().findViewById(R.id.additionalInfoText);
+
+        popupMenu
+                .setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.generalRunMenuItem:
+                                optionalIndicator.setText(R.string.general_run);
+                                return true;
+                            case R.id.RunMenuItem:
+                                optionalIndicator.setText(R.string.run);
+                                return true;
+                            case R.id.temperatureMenuItem:
+                                optionalIndicator.setText(R.string.engine_temperature);
+                                return true;
+
+                            case R.id.CANStateMenuItem:
+                                optionalIndicator.setText(R.string.can_state);
+                                return true;
+                            default:
+                                return false;
+                        }
+                    }
+                });
+        popupMenu.show();
+    }
 }

@@ -35,6 +35,8 @@ import java.util.Locale;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
 
+import com.welie.blessed.BluetoothCentralManager;
+
 public class Callbacks extends AppCompatActivity {
     public static final int GATT_INTERNAL_ERROR = 0x0081;
 
@@ -46,6 +48,8 @@ public class Callbacks extends AppCompatActivity {
     private BluetoothAdapter   adapter = null;
     private BluetoothLeScanner scanner = null;
     private BluetoothDevice    device  = null;
+
+    private BluetoothCentralManager centralManager = null;
 
     private Runnable discoverServicesRunnable = null;
 

@@ -47,34 +47,11 @@ public class SettingsActivity extends AppCompatActivity {
         }
     };
 
-    private Callbacks callbacks = new Callbacks(mHandler, scanner);
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-
-        adapter = BluetoothAdapter.getDefaultAdapter();
-        scanner = adapter.getBluetoothLeScanner();
-
-        if (adapter == null || !adapter.isEnabled()) {
-            // bluetooth le is disabled
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivity(enableBtIntent);
-            finish();
-        }
-
-        Button scanButton = findViewById(R.id.scanButton);
-        scanButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                callbacks.startScan();
-                gatt = device.connectGatt(SettingsActivity.this, false, callbacks.bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
-            }
-        });
-
-
     }
 
 

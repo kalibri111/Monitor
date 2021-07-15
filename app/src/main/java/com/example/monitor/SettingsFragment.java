@@ -4,7 +4,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -15,7 +17,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,25 +31,23 @@ import android.widget.Button;
  * create an instance of this fragment.
  */
 public class SettingsFragment extends Fragment {
+    LocationManager manager;
 
-    private BluetoothAdapter adapter = null;
+    private final Handler handler = new Handler();
+
+
+    private BluetoothAdapter   adapter = null;
     private BluetoothLeScanner scanner = null;
-    private BluetoothDevice device  = null;
-    private BluetoothGatt gatt    = null;
+    private BluetoothDevice    device  = null;
+    private BluetoothGatt      gatt    = null;
 
-    public Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            device = (BluetoothDevice) msg.obj;
-            if (device != null) {
-                Log.i("Monitor", device.getName());
-            } else {
-                Log.i("Monitor", "Devise still null");
-            }
-        }
-    };
+    private LeDeviceListAdapter devicesList = null;
 
-    private Callbacks callbacks = new Callbacks(mHandler, scanner);
+    ArrayAdapter<String> names = null;
+
+
+
+    private Callbacks callbacks;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -89,8 +95,58 @@ public class SettingsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        adapter = BluetoothAdapter.getDefaultAdapter();
-        scanner = adapter.getBluetoothLeScanner();
+
+        callbacks = new Callbacks(getContext(), getActivity());
+        manager   = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+
+
+        ListView devices = view.findViewById(R.id.devicesList);
+
+        names = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, callbacks.getDevicesList());
+        devices.setAdapter(names);
+
+        devices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String itemClicked = (String) parent.getItemAtPosition(position);
+
+                device = callbacks.getBoundedDeviceByName(itemClicked);
+
+                if (!callbacks.connect(device.getAddress())) {
+
+                    Toast.makeText(getContext(), "Device connection failed", Toast.LENGTH_SHORT).show();
+
+//                    final Handler handler = new Handler();
+//
+//                    handler.postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            callbacks.enableTXNotification();
+//                        }
+//                    }, 100);
+//
+//                    handler.postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            callbacks.writeRXCharacteristic(new byte[]{0x10, 0x31, 0x32, 0x33, 0x34, 0x35, 0x35});
+//                        }
+//                    }, 100);
+
+
+
+
+                    // experimental check password
+
+
+
+//                    final Handler handler = new Handler();
+
+
+                }
+            }
+        });
+
+
 
         if (adapter == null || !adapter.isEnabled()) {
             // bluetooth le is disabled
@@ -102,11 +158,24 @@ public class SettingsFragment extends Fragment {
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                callbacks.startScan();
-                gatt = device.connectGatt(view.getContext(), false, callbacks.bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
+                callbacks.startScan(manager);
+
+
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        names.notifyDataSetChanged();
+                    }
+                }, 100);
+
             }
         });
 
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
     }
 }

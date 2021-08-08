@@ -14,7 +14,7 @@
             <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:rowCount="3"
+                android:rowCount="4"
                 android:columnCount="1"
                 >
 
@@ -54,7 +54,7 @@
                                 android:textStyle="normal" />
 
                             <EditText
-                                android:id="@+id/maxCurrentEdit"
+                                android:id="@+id/maxAccCurrentEdit"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="number" />
@@ -76,6 +76,7 @@
                             <EditText
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:id="@+id/maxBrakeCurrentEdit"
                                 android:inputType="number"/>
                         </LinearLayout>
 
@@ -93,6 +94,7 @@
                                 android:text="Тормозить двигателем"
                                 android:textStyle="normal" />
                             <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/engineBrake"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginLeft="20dp"
@@ -141,6 +143,7 @@
                             <EditText
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:id="@+id/maxForwardSpeedEdit"
                                 android:inputType="number" />
                         </LinearLayout>
 
@@ -158,6 +161,7 @@
                                 android:text="Макс скорость назад"
                                 android:textStyle="normal" />
                             <EditText
+                                android:id="@+id/maxBackwardSpeedEdit"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="number"/>
@@ -177,6 +181,7 @@
                                 android:text="Макс уск вперед"
                                 android:textStyle="normal" />
                             <EditText
+                                android:id="@+id/maxAccForwardEdit"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="number"/>
@@ -196,9 +201,78 @@
                                 android:text="Макс уск назад"
                                 android:textStyle="normal" />
                             <EditText
+                                android:id="@+id/maxAccBackwardEdit"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="number"/>
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_row="2"
+                    android:layout_column="0"
+                    android:layout_gravity="fill"
+
+                    android:layout_margin="8dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="top">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginStart="8dp"
+                            android:text="Свет"
+                            android:textStyle="bold"/>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="2dp"
+                                android:text="Включать автоматически"
+                                android:textStyle="normal" />
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/autoLight"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="20dp"
+                                android:checked="false"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="2dp"
+                                android:text="Ночной свет"
+                                android:textStyle="normal" />
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/nightLight"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="20dp"
+                                android:checked="false"/>
                         </LinearLayout>
 
                     </LinearLayout>

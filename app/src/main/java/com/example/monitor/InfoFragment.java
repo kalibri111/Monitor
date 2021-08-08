@@ -1,9 +1,15 @@
 package com.example.monitor;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentResultListener;
 
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +20,8 @@ import android.view.ViewGroup;
  * create an instance of this fragment.
  */
 public class InfoFragment extends Fragment {
+    private BluetoothLayer  bluetoothLayer;
+    private Runnable        requestData;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -59,6 +67,52 @@ public class InfoFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_info, container, false);
+        View view = inflater.inflate(R.layout.fragment_info, container, false);
+
+
+
+        return view;
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getParentFragmentManager().setFragmentResultListener("device", this, new FragmentResultListener() {
+            @Override
+            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                String deviceAddress = result.getString("connectedDeviceMAC");
+
+                bluetoothLayer = BluetoothLayer.getInstance(getContext());
+                bluetoothLayer.setBoundedDevice(deviceAddress);
+
+//                initial request
+                requestData = new Runnable() {
+                    @Override
+                    public void run() {
+//                        FOR TEST ONLY
+                        bluetoothLayer.writeRXCharacteristic(SettingsFragment.makeRequestPackage(DeviceInfo.READ_SPECIFIC_DATA_GROUP, new byte[] {}));
+                    }
+                };
+
+                requestData.run();
+            }
+        });
+    }
+
+    private void refreshRenderedData(byte[] data) {
+        // set value to textViews from data by index from DeviceInfo
+    }
+
+    private final BroadcastReceiver txReceiver = new BroadcastReceiver() {
+        Handler handler = new Handler();
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            byte[] value = (byte[]) intent.getSerializableExtra(DeviceInfo.TX_DATA_DETECTED_EXTRA);
+
+            if (value[0] == DeviceInfo.READ_SPECIFIC_DATA_GROUP) {
+                refreshRenderedData(value);
+                handler.postDelayed(requestData, 100);
+            }
+        }
+    };
 }

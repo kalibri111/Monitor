@@ -23,7 +23,7 @@
                 android:id="@+id/speedIndicator"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="1"/>
+                android:text="1" />
 
             <TextView
                 android:id="@+id/lightIndicator"
@@ -75,14 +75,15 @@
                 app:sv_speedometerMode="TOP_LEFT"
                 app:sv_textColor="@color/black"
                 app:sv_unit="км/ч"
+                app:sv_trembleDegree="0"
                 app:sv_unitTextColor="@color/black" />
 
             <com.github.anastr.speedviewlib.PointerSpeedometer
                 android:id="@+id/currentView"
                 android:layout_width="200dp"
                 android:layout_height="200dp"
-                android:layout_toLeftOf="@+id/speedView"
                 android:layout_marginStart="2dp"
+                android:layout_toLeftOf="@+id/speedView"
                 app:sv_backgroundCircleColor="@color/white"
                 app:sv_endDegree="320"
                 app:sv_indicator="NeedleIndicator"
@@ -94,6 +95,7 @@
                 app:sv_startDegree="90"
                 app:sv_textColor="@color/black"
                 app:sv_unit="Ампер"
+                app:sv_trembleDegree="0"
                 app:sv_unitTextColor="@color/black" />
 
         </RelativeLayout>
@@ -121,7 +123,8 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:layoutDirection="rtl"
-                android:mirrorForRtl="true"/>
+                android:id="@+id/energyRemains"
+                android:mirrorForRtl="true" />
 
         </RelativeLayout>
 
@@ -143,10 +146,10 @@
             <TextView
                 android:id="@+id/additionalInfoValue"
                 android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_toEndOf="@id/additionalInfoText"
-                android:layout_height="wrap_content"
-                android:text="Выберете нужный параметр слева"/>
+                android:text="Выберете нужный параметр слева" />
 
         </RelativeLayout>
 

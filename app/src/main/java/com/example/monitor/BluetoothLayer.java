@@ -23,7 +23,9 @@ import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Looper;
+import android.os.Parcel;
 import android.os.ParcelUuid;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.ArrayAdapter;
@@ -38,6 +40,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -55,18 +58,14 @@ import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.WriteType;
 
-public class BluetoothLayer extends AppCompatActivity {
+public class BluetoothLayer {
     //******************************************************
     public  static final int    GATT_INTERNAL_ERROR = 0x0081;
     private static final String TAG                 = "Monitor";
 
 
 
-    private BluetoothPeripheral       boundedDevice = null;
-    private BluetoothGatt         gatt          = null;
-    private BluetoothAdapter      adapter       = null;
-    private BluetoothLeScanner    scanner       = null;
-    private BluetoothManager   mBluetoothManager = null;
+    private BluetoothPeripheral   boundedDevice = null;
     private LeDeviceListAdapter   devicesList   = new LeDeviceListAdapter();
     private ArrayList<String>     devicesListNames   = new ArrayList<String>();
     private Context               context       = null;
@@ -106,7 +105,7 @@ public class BluetoothLayer extends AppCompatActivity {
         public void onDiscoveredPeripheral(BluetoothPeripheral peripheral, ScanResult scanResult) {
             centralManager.stopScan();
             devicesList.add(peripheral);
-            devicesListNames.add(peripheral.getName());
+            devicesListNames.add(peripheral.getName() + " " + peripheral.getAddress());
             if (namesAdapter != null) {
 
                 namesAdapter.notifyDataSetChanged();
@@ -144,8 +143,6 @@ public class BluetoothLayer extends AppCompatActivity {
             Intent intent = new Intent(DeviceInfo.TX_DATA_DETECTED);
             intent.putExtra(DeviceInfo.TX_DATA_DETECTED_EXTRA, value);
             context.sendBroadcast(intent);
-
-            Log.e(TAG, String.format("GET TX answer: %h from characteristic %s", value[0], characteristic.getUuid().toString()));
         }
 
         @Override
@@ -265,14 +262,20 @@ public class BluetoothLayer extends AppCompatActivity {
     }
 
     public BluetoothPeripheral getBoundedDeviceByName(String name) {
+        // тут в качестве имени передается имя + " " + МАС
+        String name_one_hundred_percent = name.split("\\s+")[0];
         for (BluetoothPeripheral d : devicesList) {
-            if (d.getName().equals(name)) {
+            if (d.getName().equals(name_one_hundred_percent)) {
                 boundedDevice = d;
                 return d;
             }
         }
 
         return null;
+    }
+
+    public void setBoundedDevice(String mac) {
+        boundedDevice = centralManager.getPeripheral(mac);
     }
 
     public void clearDevicesList() {
@@ -298,4 +301,11 @@ public class BluetoothLayer extends AppCompatActivity {
 //        startScan();
     }
 
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
 }

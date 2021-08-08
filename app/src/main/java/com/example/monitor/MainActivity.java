@@ -14,8 +14,18 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.material.navigation.NavigationView;
+import com.welie.blessed.BluetoothPeripheral;
 
 public class MainActivity extends AppCompatActivity {
+    private BluetoothPeripheral connectedDevice = null;
+
+    public BluetoothPeripheral getConnectedDevice() {
+        return connectedDevice;
+    }
+
+    public void setConnectedDevice(BluetoothPeripheral connectedDevice) {
+        this.connectedDevice = connectedDevice;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

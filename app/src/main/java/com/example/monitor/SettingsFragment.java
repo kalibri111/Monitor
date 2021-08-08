@@ -14,10 +14,16 @@ import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import android.os.Handler;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,9 +31,11 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.welie.blessed.BluetoothPeripheral;
@@ -48,13 +56,17 @@ public class SettingsFragment extends Fragment {
 
     private static final String TAG = "Monitor";
 
+    private Thread dataPipeServiceThread;
 
     private BluetoothPeripheral connectedDevice = null;
 
     private static final int REQUEST_ENABLE_BT = 1;
 
-    public static final int ACCESS_LOCATION_REQUEST = 2;
+    private static final int ACCESS_LOCATION_REQUEST = 2;
 
+    private static boolean isDisconnectButtonEnable = false;
+
+    private static final int PASSWORD_LENGTH = 6;
 
     ArrayAdapter<String> names = null;
 
@@ -111,7 +123,110 @@ public class SettingsFragment extends Fragment {
         view.getContext().registerReceiver(txReceiver, new IntentFilter(DeviceInfo.TX_DATA_DETECTED));
 
 
-        ListView devices = view.findViewById(R.id.devicesList);
+        ListView devices                        = view.findViewById(R.id.devicesList);
+        Button disconnectButton                 = view.findViewById(R.id.disconnectButton);
+        Button scanButton                       = view.findViewById(R.id.scanButton);
+        TextView maxForwardAccelerationCurrent  = view.findViewById(R.id.maxAccCurrentEdit);
+        TextView maxBrakeCurrent                = view.findViewById(R.id.maxBrakeCurrentEdit);
+        TextView maxForwardSpeed                = view.findViewById(R.id.maxForwardSpeedEdit);
+        TextView maxBackwardSpeed               = view.findViewById(R.id.maxBackwardSpeedEdit);
+        TextView maxAccForward                  = view.findViewById(R.id.maxAccForwardEdit);
+        TextView maxAccBackward                 = view.findViewById(R.id.maxAccBackwardEdit);
+        SwitchCompat engineBrake                = view.findViewById(R.id.engineBrake);
+        SwitchCompat lightAuto                  = view.findViewById(R.id.autoLight);
+        SwitchCompat lightMode                  = view.findViewById(R.id.nightLight);
+
+        // input data listeners:
+
+        maxForwardAccelerationCurrent.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (bluetoothLayer != null) {
+
+                }
+            }
+        });
+
+        maxBrakeCurrent.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (bluetoothLayer != null) {
+
+                }
+            }
+        });
+
+        maxForwardSpeed.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (bluetoothLayer != null) {
+
+                }
+            }
+        });
+
+        maxBackwardSpeed.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (bluetoothLayer != null) {
+
+                }
+            }
+        });
+
+        maxAccForward.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (bluetoothLayer != null) {
+
+                }
+            }
+        });
+
+        maxAccBackward.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (bluetoothLayer != null) {
+
+                }
+            }
+        });
 
         devices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -121,21 +236,57 @@ public class SettingsFragment extends Fragment {
 
                 connectedDevice = bluetoothLayer.getBoundedDeviceByName(itemClicked);
 
-                bluetoothLayer.connect(connectedDevice);
+                if (connectedDevice != null) {
+                    bluetoothLayer.connect(connectedDevice);
+                    disconnectButton.setEnabled(true);
+                    isDisconnectButtonEnable = true;
 
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        buildPasswordAlertDialog();
-                    }
-                }, 100);
-
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            buildPasswordAlertDialog();
+                        }
+                    }, 100);
+                } else {
+                    Toast.makeText(getContext(), "Выбранное устройство не существует", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
+        engineBrake.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
 
-        Button scanButton = view.findViewById(R.id.scanButton);
+                } else {
+
+                }
+            }
+        });
+
+        lightAuto.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+
+                } else {
+
+                }
+            }
+        });
+
+        lightMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+
+                } else {
+
+                }
+            }
+        });
+
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -154,7 +305,8 @@ public class SettingsFragment extends Fragment {
             }
         });
 
-        Button disconnectButton = view.findViewById(R.id.disconnectButton);
+
+        disconnectButton.setEnabled(isDisconnectButtonEnable);
         disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -162,6 +314,8 @@ public class SettingsFragment extends Fragment {
                     bluetoothLayer.disconnect(connectedDevice);
                     Toast.makeText(getContext(), String.format("Device %s disconnected", connectedDevice.getName()), Toast.LENGTH_SHORT).show();
                 }
+                disconnectButton.setEnabled(false);
+                isDisconnectButtonEnable = false;
             }
         });
 
@@ -196,33 +350,62 @@ public class SettingsFragment extends Fragment {
     }
 
     /*
+    * check if given response provides error code
+    * */
+    public static boolean isErrorResponse(byte response) {
+        return response < 0;
+    }
+
+    /*
+    * extract command gave error from error answer
+    * */
+    private static byte extractErrorCommand(byte response) {
+        return (byte)(response & 0x7f);
+    }
+
+    /*
      * big switch of incoming information
      * */
-    public static final BroadcastReceiver txReceiver = new BroadcastReceiver() {
+    public final BroadcastReceiver txReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             byte[] value = (byte[]) intent.getSerializableExtra(DeviceInfo.TX_DATA_DETECTED_EXTRA);
 
-            switch (value[0]) {
-                case DeviceInfo.PASS_PASSWORD_COMMAND: {
-                    Toast.makeText(context, "Password OK", Toast.LENGTH_SHORT).show();
-                    break;
+            if (isErrorResponse(value[0])) {
+                Log.e(TAG, String.format("Command 0x%h raises error 0x%h", extractErrorCommand(value[0]), value[1]));
+
+                switch (value[1]) {
+                    case DeviceInfo.WRONG_PASSWORD_ERROR: {
+                        Toast.makeText(context, "Wrong Password", Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+
                 }
 
-                case DeviceInfo.WRONG_PASSWORD_ANSWER: {
-                    Toast.makeText(context, "Wrong password", Toast.LENGTH_SHORT).show();
-                    break;
-                }
+            } else {
+                Log.e(TAG, String.format("Got valid answer 0x%h from device", value[0]));
 
-                case DeviceInfo.ERROR_PASSWORD_ANSWER: {
-                    Toast.makeText(context, "Password error", Toast.LENGTH_SHORT).show();
-                    break;
+                switch (value[0]) {
+                    case DeviceInfo.PASS_PASSWORD_COMMAND: {
+                        Toast.makeText(context, "Password OK", Toast.LENGTH_SHORT).show();
+
+                        ((MainActivity)getActivity()).setConnectedDevice(connectedDevice);
+
+                        break;
+                    }
+
+                    case DeviceInfo.NEW_PASSWORD_COMMAND: {
+                        Toast.makeText(context, "Successfully set new password", Toast.LENGTH_SHORT).show();
+
+//                        bluetoothLayer.writeRXCharacteristic(makeRequestPackage(DeviceInfo.PASS_PASSWORD_COMMAND, "111111".getBytes(StandardCharsets.UTF_8)));
+                    }
                 }
             }
+
         }
     };
 
-    private byte[] makeRequestPackage(byte command, byte[] commandBody) {
+    public static byte[] makeRequestPackage(byte command, byte[] commandBody) {
         byte[] result = new byte[1 + commandBody.length];
         result[0] = command;
         System.arraycopy(commandBody, 0, result, 1, commandBody.length);
@@ -234,22 +417,29 @@ public class SettingsFragment extends Fragment {
         alertDialog.setTitle("PASSWORD");
         alertDialog.setMessage("Enter Password");
 
-        final EditText input = new EditText(getContext());
+        EditText input = new EditText(getContext());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
         input.setLayoutParams(lp);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setFilters(new InputFilter[] {new InputFilter.LengthFilter(PASSWORD_LENGTH)});
         alertDialog.setView(input);
 
         alertDialog.setPositiveButton("YES",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        bluetoothLayer.writeRXCharacteristic(
-                                makeRequestPackage(
-                                        DeviceInfo.PASS_PASSWORD_COMMAND,
-                                        input.getText().toString().getBytes(StandardCharsets.UTF_8)
-                                )
-                        );
+                        if (input.getText().toString().length() == PASSWORD_LENGTH) {
+                            bluetoothLayer.writeRXCharacteristic(
+                                    makeRequestPackage(
+                                            DeviceInfo.PASS_PASSWORD_COMMAND,
+                                            input.getText().toString().getBytes(StandardCharsets.UTF_8)
+                                    )
+                            );
+                        } else {
+                            Toast.makeText(getContext(), String.format("Пароль должен содержать в точности %d цифр", PASSWORD_LENGTH), Toast.LENGTH_SHORT).show();
+                        }
+
 
                     }
                 });
@@ -398,4 +588,6 @@ public class SettingsFragment extends Fragment {
 
         return bluetoothAdapter.isEnabled();
     }
+
+
 }

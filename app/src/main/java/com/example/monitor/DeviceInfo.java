@@ -44,11 +44,8 @@ public class DeviceInfo {
     public static final byte RETURN_TO_FACTORY_COMMAND = 0x0F;
     public static final byte PASS_PASSWORD_COMMAND = 0x10;
     public static final byte NEW_PASSWORD_COMMAND = 0x11;
-    public static final byte READ_INDICATION_DATA_GROUP = 0x12;
-    public static final byte READ_ENGINE_DATA_GROUP = 0x13;
-    public static final byte READ_SPEED_DATA_GROUP = 0x14;
-    public static final byte READ_LIGHT_DATA_GROUP = 0x15;
-    public static final byte READ_SPECIFIC_DATA_GROUP = 0x16;
+    public static final byte READ_READTABLE_DATA_GROUP = 0x12;
+    public static final byte READ_READWRITETABLE_DATA_GROUP = 0x13;
 
     // ***********************  ERROR CODES  ***********************
     public static final byte UNSUPPORTED_FUNCTION_CODE_ERROR = 0x01;
@@ -59,40 +56,68 @@ public class DeviceInfo {
     public static final byte WRONG_PASSWORD_ERROR = 0x06;
     public static final byte NO_ACCESS_ERROR = 0x07;
 
-    // ***********************  VALUE GROUP ADDRESSES  *******************
-    public static final int SPEED_GROUP_ADDRESS = 0;
-    public static final int CURRENT_GROUP_ADDRESS = 0;
-    public static final int ENERGY_GROUP_ADDRESS = 0;
-    public static final int ABS_GROUP_ADDRESS = 0;
-    public static final int ASR_GROUP_ADDRESS = 0;
-    public static final int FIRST_SPEED_ENABLED_GROUP_ADDRESS = 0;
-    public static final int SECOND_SPEED_ENABLED_GROUP_ADDRESS = 0;
-    public static final int THIRD_SPEED_ENABLED_GROUP_ADDRESS = 0;
-    public static final int BRAKE_GROUP_ADDRESS = 0;
-    public static final int LIGHT_GROUP_ADDRESS = 0;
-    public static final int DEVICE_ON_GROUP_ADDRESS = 0;
-    public static final int COMMON_MILEAGE_INDICATION_GROUP_ADDRESS = 0;
-    public static final int MILEAGE_INDICATION_GROUP_ADDRESS = 0;
-    public static final int IEC_TEMPERATURE_INDICATION_GROUP_ADDRESS = 0;
-    public static final int CAN_STATE_INDICATION_GROUP_ADDRESS = 0;
-    public static final int MAX_SPEEDUP_CURRENT_GROUP_ADDRESS = 0;
-    public static final int MAX_SPEEDDOWN_CURRENT_GROUP_ADDRESS = 0;
-    public static final int ENGINE_BRAKE_GROUP_ADDRESS = 0;
-    public static final int ENGINE_SPEEDLIMIT_BRAKE_GROUP_ADDRESS = 0;
-    public static final int MAX_FORWARD_SPEED_GROUP_ADDRESS = 0;
-    public static final int MAX_BACKWARD_SPEED_GROUP_ADDRESS = 0;
-    public static final int MAX_FORWARD_SPEED_ACCELERATION_GROUP_ADDRESS = 0;
-    public static final int MAX_BACKWARD_SPEED_ACCELERATION_GROUP_ADDRESS = 0;
-    public static final int MAX_FORWARD_MOMENT_ACCELERATION_GROUP_ADDRESS = 0;
-    public static final int MAX_BACKWARD_MOMENT_ACCELERATION_GROUP_ADDRESS = 0;
-    public static final int LIGHT_AUTO_GROUP_ADDRESS = 0;
-    public static final int LIGHT_MODE_GROUP_ADDRESS = 0;
-    public static final int COMMON_MILEAGE_GROUP_ADDRESS = 0;
-    public static final int MILEAGE_GROUP_ADDRESS = 0;
-    public static final int IEC_TEMPERATURE_GROUP_ADDRESS = 0;
-    public static final int CAN_STATE_GROUP_ADDRESS = 0;
-    public static final int ENERGY_CONSUMPTION_GROUP_ADDRESS = 0;
-    public static final int ENERGY_REMAINS_GROUP_ADDRESS = 0;
-    public static final int BMS_STATE_GROUP_ADDRESS = 0;
+    // ***********************  "READ" TABLE  *******************
+    public static final int SPEED = 1;
+    public static final int CURRENT = 2;
+    public static final int BUTTERY_VOLTAGE = 3;
+    public static final int ENERGY_CONSUMPTION = 7;
+    public static final int ENERGY_REMAINS = 11;
+    public static final int COMMON_MILEAGE = 15;
+    public static final int MILEAGE = 16;
+    public static final int IEC_TEMPERATURE = 22;
+    public static final int STATE_REGISTER_1 = 28;
+
+    // state register 1 byte number
+    public static final int DEVICE_ON = 0;
+    public static final int FIRST_SPEED = 2;
+    public static final int SECOND_SPEED = 3;
+    public static final int THIRD_SPEED = 4;
+    public static final int ENGINE_BRAKE = 5;
+    public static final int REVERSE_ENABLED = 7;
+    public static final int BY_FOOT_MOVING_MODE = 8;
+    public static final int SPEED_SENSOR_DISABLED_MODE = 9;  // повторяется в "Чтение и Запись"?
+    public static final int BRAKE = 11;
+    public static final int TURN_LEFT = 13;
+    public static final int TURN_RIGHT = 14;
+    public static final int POSITION_LIGHT = 0;
+    public static final int HEADLIGHT = 0;
+    public static final int DECO_LIGHT = 0;
+
+    // ***********************  "READ AND WRITE" TABLE  *******************
+    public static final int MOMENT_REGULATION_PROHIBIT_MODE = 51;
+    public static final int ONLY_MOMENT_REGULATION_MODE = 52;
+
+    public static final int FIRST_SPEED_VALUE = 53;
+    public static final int SECOND_SPEED_VALUE = 54;
+    public static final int THIRD_SPEED_VALUE = 55;
+
+    public static final int MAX_SPEED_UP_CURRENT = 56;
+    public static final int MAX_SPEED_DOWN_CURRENT = 57;
+
+    public static final int ENGINE_BRAKE_PROHIBITED = 58;
+
+    public static final int MAX_FORWARD_SPEED = 59;
+    public static final int MAX_BACKWARD_SPEED = 60;
+
+    public static final int MAX_FORWARD_SPEED_ACCELERATION = 61;
+    public static final int MAX_BACKWARD_SPEED_ACCELERATION = 62;
+
+    public static final int MAX_FORWARD_MOMENT_ACCELERATION = 63;
+    public static final int MAX_BACKWARD_MOMENT_ACCELERATION = 64;
+
+    public static final int SPEED_SENSOR_DISABLED_MODE_VALUE = 65;
+
+    public static final int ENGINE_SPEED_LIMIT_BRAKE_MODE = 66;
+
+    public static final int ABS_ASR_MODE = 91;
+
+    public static final int LIGHT_AUTO_MODE = 81;
+    public static final int LIGHT_LEVEL = 82;
+
+    public static final int RESET_MILEAGE = 202;
+
+    public static final int ENABLE_LIGHT = 204;
+
+    public static final int CAN_STATE_INDICATION = 0;
 
 }

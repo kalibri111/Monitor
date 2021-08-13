@@ -125,7 +125,7 @@ public class MainFragment extends Fragment {
 
         view.getContext().registerReceiver(txReceiver, new IntentFilter(DeviceInfo.TX_DATA_DETECTED));
 
-        speedometer.speedTo(15);  // ONLY FOR DEBUG
+//        speedometer.speedTo(15);  // ONLY FOR DEBUG
 
         return view;
     }
@@ -189,42 +189,42 @@ public class MainFragment extends Fragment {
 
     private void refreshRenderedData(byte[] actualValues) {
         // set speed number
-        if (actualValues[DeviceInfo.FIRST_SPEED_ENABLED_GROUP_ADDRESS] == 1) {
+        if (actualValues[DeviceInfo.FIRST_SPEED] == 1) {
             speedNumber.setText("1");
-        } else if (actualValues[DeviceInfo.SECOND_SPEED_ENABLED_GROUP_ADDRESS] == 1) {
+        } else if (actualValues[DeviceInfo.SECOND_SPEED] == 1) {
             speedNumber.setText("2");
-        } else if (actualValues[DeviceInfo.THIRD_SPEED_ENABLED_GROUP_ADDRESS] == 1) {
+        } else if (actualValues[DeviceInfo.THIRD_SPEED] == 1) {
             speedNumber.setText("3");
-        } else if (actualValues[DeviceInfo.BRAKE_GROUP_ADDRESS] == 1) {
+        } else if (actualValues[DeviceInfo.BRAKE] == 1) {
             speedNumber.setText("STOP");
         }
 
         // set speed value
-        float speedValue = actualValues[DeviceInfo.SPEED_GROUP_ADDRESS] + (float)actualValues[DeviceInfo.SPEED_GROUP_ADDRESS + 1] / 10;
+        float speedValue = actualValues[DeviceInfo.SPEED] + (float)actualValues[DeviceInfo.SPEED + 1] / 10;
         speedometer.speedTo(speedValue);
 
         // set current value
-        float currentValue = actualValues[DeviceInfo.CURRENT_GROUP_ADDRESS] + (float)actualValues[DeviceInfo.CURRENT_GROUP_ADDRESS + 1] / 10;
+        float currentValue = actualValues[DeviceInfo.CURRENT] + (float)actualValues[DeviceInfo.CURRENT + 1] / 10;
         speedometer.speedTo(currentValue);
 
         // set light state
-        if (actualValues[DeviceInfo.LIGHT_GROUP_ADDRESS] == 1) {
+        if (actualValues[DeviceInfo.LIGHT] == 1) {
             lightState.setText("Enabled");
         } else {
             lightState.setVisibility(View.INVISIBLE);
         }
 
         // set abs ars state
-        if (actualValues[DeviceInfo.ABS_GROUP_ADDRESS] == 1) {
+        if (actualValues[DeviceInfo.ABS] == 1) {
             AbsAsrState.setText("ABS");
-        } else if (actualValues[DeviceInfo.ASR_GROUP_ADDRESS] == 1) {
+        } else if (actualValues[DeviceInfo.ASR] == 1) {
             AbsAsrState.setText("ASR");
         } else {
             AbsAsrState.setVisibility(View.INVISIBLE);
         }
 
         // device enabled
-        if (actualValues[DeviceInfo.DEVICE_ON_GROUP_ADDRESS] == 1) {
+        if (actualValues[DeviceInfo.DEVICE_ON] == 1) {
             deviceEnabled.setText("Device ON");
         } else {
             deviceEnabled.setText("Device OF");
@@ -233,23 +233,23 @@ public class MainFragment extends Fragment {
         // additional info
         switch (selectedAdditional) {
             case R.id.generalRunMenuItem:{
-                additionalInfo.setText(actualValues[DeviceInfo.COMMON_MILEAGE_INDICATION_GROUP_ADDRESS]);
+                additionalInfo.setText(actualValues[DeviceInfo.COMMON_MILEAGE_INDICATION]);
             }
             case R.id.RunMenuItem:{
-                additionalInfo.setText(actualValues[DeviceInfo.MILEAGE_INDICATION_GROUP_ADDRESS]);
+                additionalInfo.setText(actualValues[DeviceInfo.MILEAGE_INDICATION]);
             }
             case R.id.temperatureMenuItem:{
-                additionalInfo.setText(actualValues[DeviceInfo.IEC_TEMPERATURE_INDICATION_GROUP_ADDRESS]);
+                additionalInfo.setText(actualValues[DeviceInfo.IEC_TEMPERATURE_INDICATION]);
             }
 
             case R.id.CANStateMenuItem:{
-                additionalInfo.setText(actualValues[DeviceInfo.CAN_STATE_INDICATION_GROUP_ADDRESS]);
+                additionalInfo.setText(actualValues[DeviceInfo.CAN_STATE_INDICATION]);
             }
             // TODO: default?
         }
 
         // battery remains
-        energyRemains.setProgress(actualValues[DeviceInfo.ENERGY_REMAINS_GROUP_ADDRESS]);
+        energyRemains.setProgress(actualValues[DeviceInfo.ENERGY_REMAINS]);
     }
 
     private final BroadcastReceiver txReceiver = new BroadcastReceiver() {
@@ -260,10 +260,15 @@ public class MainFragment extends Fragment {
 //            FOR TEST ONLY
             switch (value[0]){
                 case DeviceInfo.READ_WORD_COMMAND: {
-                    speedometer.speedTo((float)(value[1] + value[2]/10.));
+                    int bigger = value[1] & 0xff;
+                    int lesser = value[2] & 0xff;
+                    float speed = (float)((bigger << 8) + lesser) / 10;
+                    speedometer.speedTo(speed);
+                    Log.e("Monitor", String.format("set speed to %f from %h %h", speed, value[1], value[2]));
                 }
 
             }
+            handler.postDelayed(requestData, 500);
 //            if (value[0] == DeviceInfo.READ_INDICATION_DATA_GROUP) {
 //                refreshRenderedData(value);
 //                handler.postDelayed(requestData, 100);

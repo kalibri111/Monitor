@@ -89,8 +89,7 @@ public class InfoFragment extends Fragment {
                 requestData = new Runnable() {
                     @Override
                     public void run() {
-//                        FOR TEST ONLY
-                        bluetoothLayer.writeRXCharacteristic(SettingsFragment.makeRequestPackage(DeviceInfo.READ_SPECIFIC_DATA_GROUP, new byte[] {}));
+
                     }
                 };
 

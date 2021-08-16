@@ -51,6 +51,8 @@ public class MainFragment extends Fragment {
 
     BluetoothLayer bluetoothLayer = null;
 
+    DataPackages dataPackages = new DataPackages();
+
     Runnable requestData = null;
 
     private int selectedAdditional;
@@ -140,18 +142,66 @@ public class MainFragment extends Fragment {
             bluetoothLayer = BluetoothLayer.getInstance(getContext());
             bluetoothLayer.setBoundedDevice(connectedFromSettingsFragment.getAddress());
 
-//                initial request
             requestData = new Runnable() {
                 @Override
                 public void run() {
-//                        FOR TEST ONLY
-                    bluetoothLayer.writeRXCharacteristic(SettingsFragment.makeRequestPackage(DeviceInfo.READ_WORD_COMMAND, new byte[] {0x01}));
-//                        bluetoothLayer.writeRXCharacteristic(SettingsFragment.makeRequestPackage(DeviceInfo.READ_INDICATION_DATA_GROUP, new byte[] {}));
+                    requestDataView();
                 }
             };
 
             requestData.run();
         }
+    }
+
+    private void requestDataView() {
+        // request current DataView from DataPackages
+        DataView currentDataView = dataPackages.getMainFragmentDataView();
+        if (currentDataView.table == DeviceInfo.READ_TABLE) {
+
+            switch (currentDataView.size) {
+                case 1: {
+                    // read byte
+                    readCommand(DeviceInfo.READ_BYTE_COMMAND, currentDataView.address);                        }
+
+                case 2: {
+                    // read word
+                    readCommand(DeviceInfo.READ_WORD_COMMAND, currentDataView.address);
+                }
+
+                case 4: {
+                    // read dword
+                    readCommand(DeviceInfo.READ_DWORD_COMMAND, currentDataView.address);
+                }
+            }
+
+        } else if (currentDataView.table == DeviceInfo.READ_WRITE_TABLE) {
+
+            switch (currentDataView.size) {
+                case 1: {
+                    // read byte
+                    readCommand(DeviceInfo.READ_READWRITE_BYTE_COMMAND, currentDataView.address);                        }
+
+                case 2: {
+                    // read word
+                    readCommand(DeviceInfo.READ_READWRITE_WORD_COMMAND, currentDataView.address);
+                }
+
+                case 4: {
+                    // read dword
+                    readCommand(DeviceInfo.READ_READWRITE_DWORD_COMMAND, currentDataView.address);
+                }
+            }
+
+        }
+    }
+
+    private void readCommand(byte command, int address) {
+        bluetoothLayer.writeRXCharacteristic(
+                SettingsFragment.makeRequestPackage(
+                        command,
+                        new byte[] {(byte) address}
+                )
+        );
     }
 
     private void showPopupMenu(View v) {
@@ -188,68 +238,112 @@ public class MainFragment extends Fragment {
     }
 
     private void refreshRenderedData(byte[] actualValues) {
-        // set speed number
-        if (actualValues[DeviceInfo.FIRST_SPEED] == 1) {
-            speedNumber.setText("1");
-        } else if (actualValues[DeviceInfo.SECOND_SPEED] == 1) {
-            speedNumber.setText("2");
-        } else if (actualValues[DeviceInfo.THIRD_SPEED] == 1) {
-            speedNumber.setText("3");
-        } else if (actualValues[DeviceInfo.BRAKE] == 1) {
-            speedNumber.setText("STOP");
-        }
 
-        // set speed value
-        float speedValue = actualValues[DeviceInfo.SPEED] + (float)actualValues[DeviceInfo.SPEED + 1] / 10;
-        speedometer.speedTo(speedValue);
+        DataView currentDataView = dataPackages.getMainFragmentDataView();
 
-        // set current value
-        float currentValue = actualValues[DeviceInfo.CURRENT] + (float)actualValues[DeviceInfo.CURRENT + 1] / 10;
-        speedometer.speedTo(currentValue);
-
-        // set light state
-        if (actualValues[DeviceInfo.LIGHT] == 1) {
-            lightState.setText("Enabled");
-        } else {
-            lightState.setVisibility(View.INVISIBLE);
-        }
-
-        // set abs ars state
-        if (actualValues[DeviceInfo.ABS] == 1) {
-            AbsAsrState.setText("ABS");
-        } else if (actualValues[DeviceInfo.ASR] == 1) {
-            AbsAsrState.setText("ASR");
-        } else {
-            AbsAsrState.setVisibility(View.INVISIBLE);
-        }
-
-        // device enabled
-        if (actualValues[DeviceInfo.DEVICE_ON] == 1) {
-            deviceEnabled.setText("Device ON");
-        } else {
-            deviceEnabled.setText("Device OF");
-        }
-
-        // additional info
-        switch (selectedAdditional) {
-            case R.id.generalRunMenuItem:{
-                additionalInfo.setText(actualValues[DeviceInfo.COMMON_MILEAGE_INDICATION]);
-            }
-            case R.id.RunMenuItem:{
-                additionalInfo.setText(actualValues[DeviceInfo.MILEAGE_INDICATION]);
-            }
-            case R.id.temperatureMenuItem:{
-                additionalInfo.setText(actualValues[DeviceInfo.IEC_TEMPERATURE_INDICATION]);
+        switch (currentDataView.address) {
+            case DeviceInfo.SPEED: {
+                // set speed value
+                float speedValue = actualValues[0] + (float)actualValues[1] / 10;
+                speedometer.speedTo(speedValue);
             }
 
-            case R.id.CANStateMenuItem:{
-                additionalInfo.setText(actualValues[DeviceInfo.CAN_STATE_INDICATION]);
+            case DeviceInfo.CURRENT: {
+                // set current value
+                float currentValue = actualValues[0] + (float)actualValues[1] / 10;
+                speedometer.speedTo(currentValue);
             }
-            // TODO: default?
-        }
 
-        // battery remains
-        energyRemains.setProgress(actualValues[DeviceInfo.ENERGY_REMAINS]);
+            case DeviceInfo.MILEAGE: {
+                if (selectedAdditional == R.id.RunMenuItem) {
+                    float val = ByteBuffer.wrap(actualValues).getFloat(); // LE BE ?
+                    additionalInfo.setText(String.valueOf(val));
+                }
+            }
+
+            case DeviceInfo.COMMON_MILEAGE: {
+                if (selectedAdditional == R.id.generalRunMenuItem) {
+                    float val = ByteBuffer.wrap(actualValues).getFloat(); // LE BE ?
+                    additionalInfo.setText(String.valueOf(val));
+                }
+            }
+
+            case DeviceInfo.IEC_TEMPERATURE: {
+                if (selectedAdditional == R.id.CANStateMenuItem) {
+                    float val = ByteBuffer.wrap(actualValues).getFloat(); // LE BE ?
+                    additionalInfo.setText(String.valueOf(val));
+                }
+            }
+
+            case DeviceInfo.STATE_REGISTER_1: {
+                // set speed number
+                if ((actualValues[0] & DeviceInfo.FIRST_SPEED) == DeviceInfo.FIRST_SPEED) {
+
+                    speedNumber.setText("1");
+
+                } else if ((actualValues[0] & DeviceInfo.SECOND_SPEED) == DeviceInfo.SECOND_SPEED) {
+
+                    speedNumber.setText("2");
+
+                } else if ((actualValues[0] & DeviceInfo.THIRD_SPEED) == DeviceInfo.THIRD_SPEED) {
+
+                    speedNumber.setText("3");
+
+                } else if ((actualValues[1] & DeviceInfo.BRAKE) == DeviceInfo.BRAKE) {
+
+                    speedNumber.setText("STOP");
+
+                }
+
+                // set light state
+                if ((actualValues[1] & DeviceInfo.POSITION_LIGHT) == DeviceInfo.POSITION_LIGHT) {
+
+                    lightState.setText("габариты");
+
+                } else if ((actualValues[1] & DeviceInfo.HEADLIGHT) == DeviceInfo.HEADLIGHT) {
+
+                    lightState.setText("фара");
+
+                } else if ((actualValues[2] & DeviceInfo.DECO_LIGHT) == DeviceInfo.DECO_LIGHT) {
+
+                    lightState.setText("декоративный");
+
+                }
+
+                // device enabled
+                if ((actualValues[0] & DeviceInfo.DEVICE_ON)  == DeviceInfo.DEVICE_ON) {
+
+                    deviceEnabled.setText("Device ON");
+
+                } else {
+
+                    deviceEnabled.setText("Device OF");
+
+                }
+
+            }
+
+            case DeviceInfo.ENERGY_REMAINS: {
+                // battery remains
+                float en_val = ByteBuffer.wrap(actualValues).getFloat(); // LE BE ?
+                energyRemains.setProgress((int) en_val);
+            }
+
+            case DeviceInfo.ABS_ASR_MODE: {
+                // check if int8 represented in actualValues[0] == 1
+                if ((actualValues[0] & 0x01) == 0x01) {
+                    AbsAsrState.setText("ABS/ASR");
+                }
+            }
+
+            default: {}
+        }
+    }
+
+    private float convertSpeed(byte[] value) {
+        int bigger = value[1] & 0xff;
+        int lesser = value[2] & 0xff;
+        return (float)((bigger << 8) + lesser) / 10;
     }
 
     private final BroadcastReceiver txReceiver = new BroadcastReceiver() {
@@ -257,22 +351,10 @@ public class MainFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             byte[] value = (byte[]) intent.getSerializableExtra(DeviceInfo.TX_DATA_DETECTED_EXTRA);
-//            FOR TEST ONLY
-            switch (value[0]){
-                case DeviceInfo.READ_WORD_COMMAND: {
-                    int bigger = value[1] & 0xff;
-                    int lesser = value[2] & 0xff;
-                    float speed = (float)((bigger << 8) + lesser) / 10;
-                    speedometer.speedTo(speed);
-                    Log.e("Monitor", String.format("set speed to %f from %h %h", speed, value[1], value[2]));
-                }
-
-            }
-            handler.postDelayed(requestData, 500);
-//            if (value[0] == DeviceInfo.READ_INDICATION_DATA_GROUP) {
-//                refreshRenderedData(value);
-//                handler.postDelayed(requestData, 100);
-//            }
+            refreshRenderedData(value);
+            // get next value
+            dataPackages.next(DataPackages.MainFragmentDataPackage);
+            handler.postDelayed(requestData, 100);
         }
     };
 }

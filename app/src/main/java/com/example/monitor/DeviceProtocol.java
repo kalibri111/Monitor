@@ -4,7 +4,7 @@ import android.os.ParcelUuid;
 
 import java.util.UUID;
 
-public class DeviceInfo {
+public class DeviceProtocol {
 
     // ***********************  ACTIONS   ***********************
 
@@ -146,4 +146,8 @@ public class DeviceInfo {
     // ***********************  TABLES  ***********************************
     public static final int READ_TABLE          = 1;
     public static final int READ_WRITE_TABLE    = 2;
+
+    // ***********************  SWITCH MODES  *****************************
+    public static final int MODE_ON = 1;
+    public static final int MODE_OF = 0;
 }

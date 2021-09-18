@@ -18,14 +18,25 @@
                 android:columnCount="1"
                 >
 
-                <androidx.cardview.widget.CardView
+                <Button
+                    android:id="@+id/refreshButton"
                     android:layout_row="0"
+                    android:layout_column="0"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:text="Refresh"
+                    app:layout_constraintRight_toRightOf="parent" />
+
+                <androidx.cardview.widget.CardView
+                    android:layout_row="1"
                     android:layout_column="0"
                     android:layout_gravity="fill"
 
                     android:layout_margin="8dp"
                     app:cardCornerRadius="8dp"
                     app:cardElevation="8dp">
+
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -57,7 +68,7 @@
                                 android:id="@+id/maxAccCurrentEdit"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="number" />
+                                android:inputType="numberDecimal" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -77,7 +88,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:id="@+id/maxBrakeCurrentEdit"
-                                android:inputType="number"/>
+                                android:inputType="numberDecimal"/>
                         </LinearLayout>
 
                         <LinearLayout
@@ -101,13 +112,34 @@
                                 android:checked="false"/>
                         </LinearLayout>
 
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="2dp"
+                                android:text="Тормоз при превышении"
+                                android:textStyle="normal" />
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/engineAutoSpeedLimitBrake"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="20dp"
+                                android:checked="false"/>
+                        </LinearLayout>
+
                     </LinearLayout>
 
                 </androidx.cardview.widget.CardView>
 
 
                 <androidx.cardview.widget.CardView
-                    android:layout_row="1"
+                    android:layout_row="2"
                     android:layout_column="0"
                     android:layout_gravity="fill"
 
@@ -144,7 +176,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:id="@+id/maxForwardSpeedEdit"
-                                android:inputType="number" />
+                                android:inputType="numberDecimal" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -164,7 +196,7 @@
                                 android:id="@+id/maxBackwardSpeedEdit"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="number"/>
+                                android:inputType="numberDecimal"/>
                         </LinearLayout>
 
                         <LinearLayout
@@ -184,7 +216,7 @@
                                 android:id="@+id/maxAccForwardEdit"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="number"/>
+                                android:inputType="numberDecimal"/>
                         </LinearLayout>
 
                         <LinearLayout
@@ -204,7 +236,47 @@
                                 android:id="@+id/maxAccBackwardEdit"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="number"/>
+                                android:inputType="numberDecimal"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="2dp"
+                                android:text="Макс момент уск вперед"
+                                android:textStyle="normal" />
+                            <EditText
+                                android:id="@+id/maxMomentAccBackwardEdit"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="numberDecimal"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="2dp"
+                                android:text="Макс момент уск назад"
+                                android:textStyle="normal" />
+                            <EditText
+                                android:id="@+id/maxMomentAccForwardEdit"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="numberDecimal"/>
                         </LinearLayout>
 
                     </LinearLayout>
@@ -212,7 +284,7 @@
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
-                    android:layout_row="2"
+                    android:layout_row="3"
                     android:layout_column="0"
                     android:layout_gravity="fill"
 
@@ -265,14 +337,13 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="2dp"
-                                android:text="Ночной свет"
+                                android:text="Уровень освещенности"
                                 android:textStyle="normal" />
-                            <androidx.appcompat.widget.SwitchCompat
-                                android:id="@+id/nightLight"
-                                android:layout_width="wrap_content"
+                            <EditText
+                                android:id="@+id/lightLevel"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginLeft="20dp"
-                                android:checked="false"/>
+                                android:inputType="number"/>
                         </LinearLayout>
 
                     </LinearLayout>

@@ -1,5 +1,9 @@
 package com.example.monitor;
 
+import static com.example.monitor.DataManager.extractErrorCommand;
+import static com.example.monitor.DataManager.isErrorResponse;
+import static com.example.monitor.DataManager.makeRequestPackage;
+
 import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -17,15 +21,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
 import android.os.Handler;
-import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
-import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -35,28 +38,22 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.welie.blessed.BluetoothPeripheral;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link SettingsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+
 public class SettingsFragment extends Fragment {
     LocationManager manager;
 
     private final Handler handler = new Handler();
 
     private static final String TAG = "Monitor";
-
-    private Thread dataPipeServiceThread;
 
     private BluetoothPeripheral connectedDevice = null;
 
@@ -68,18 +65,37 @@ public class SettingsFragment extends Fragment {
 
     private static final int PASSWORD_LENGTH = 6;
 
+    private DataPackages dataPackages = new DataPackages();
+
     ArrayAdapter<String> names = null;
 
+    ListView        devices;
+    Button          disconnectButton;
+    Button          scanButton;
+    Button          refreshButton;
+    EditText        maxForwardAccelerationCurrent;
+    EditText        maxBrakeCurrent;
+    EditText        maxForwardSpeed;
+    EditText        maxBackwardSpeed;
+    EditText        maxAccForward;
+    EditText        maxAccBackward;
+    EditText        maxMomentAccForward;
+    EditText        maxMomentAccBackward;
+    SwitchCompat    engineBrake;
+    SwitchCompat    lightAuto;
+    SwitchCompat    engineSpeedLimitAutoBrake;
+    EditText        lightLevel;
+
+    private boolean is_engineBrakeClicked = false;
+    private boolean is_lightAutoClicked = false;
+    private boolean is_engineSpeedLimitAutoBrakeClicked = false;
 
 
     private BluetoothLayer bluetoothLayer;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
 
@@ -87,15 +103,6 @@ public class SettingsFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment SettingsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static SettingsFragment newInstance(String param1, String param2) {
         SettingsFragment fragment = new SettingsFragment();
         Bundle args = new Bundle();
@@ -120,111 +127,133 @@ public class SettingsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        view.getContext().registerReceiver(txReceiver, new IntentFilter(DeviceInfo.TX_DATA_DETECTED));
+//        view.getContext().registerReceiver(txReceiver, new IntentFilter(DeviceProtocol.TX_DATA_DETECTED));
 
 
-        ListView devices                        = view.findViewById(R.id.devicesList);
-        Button disconnectButton                 = view.findViewById(R.id.disconnectButton);
-        Button scanButton                       = view.findViewById(R.id.scanButton);
-        TextView maxForwardAccelerationCurrent  = view.findViewById(R.id.maxAccCurrentEdit);
-        TextView maxBrakeCurrent                = view.findViewById(R.id.maxBrakeCurrentEdit);
-        TextView maxForwardSpeed                = view.findViewById(R.id.maxForwardSpeedEdit);
-        TextView maxBackwardSpeed               = view.findViewById(R.id.maxBackwardSpeedEdit);
-        TextView maxAccForward                  = view.findViewById(R.id.maxAccForwardEdit);
-        TextView maxAccBackward                 = view.findViewById(R.id.maxAccBackwardEdit);
-        SwitchCompat engineBrake                = view.findViewById(R.id.engineBrake);
-        SwitchCompat lightAuto                  = view.findViewById(R.id.autoLight);
-        SwitchCompat lightMode                  = view.findViewById(R.id.nightLight);
+        devices                        = view.findViewById(R.id.devicesList);
+        disconnectButton               = view.findViewById(R.id.disconnectButton);
+        scanButton                     = view.findViewById(R.id.scanButton);
+        maxForwardAccelerationCurrent  = view.findViewById(R.id.maxAccCurrentEdit);
+        maxBrakeCurrent                = view.findViewById(R.id.maxBrakeCurrentEdit);
+        maxForwardSpeed                = view.findViewById(R.id.maxForwardSpeedEdit);
+        maxBackwardSpeed               = view.findViewById(R.id.maxBackwardSpeedEdit);
+        maxAccForward                  = view.findViewById(R.id.maxAccForwardEdit);
+        maxAccBackward                 = view.findViewById(R.id.maxAccBackwardEdit);
+        engineBrake                    = view.findViewById(R.id.engineBrake);
+        lightAuto                      = view.findViewById(R.id.autoLight);
+        lightLevel                     = view.findViewById(R.id.lightLevel);
+        engineSpeedLimitAutoBrake      = view.findViewById(R.id.engineAutoSpeedLimitBrake);
+        maxMomentAccForward            = view.findViewById(R.id.maxMomentAccForwardEdit);
+        maxMomentAccBackward           = view.findViewById(R.id.maxMomentAccBackwardEdit);
+        refreshButton                  = view.findViewById(R.id.refreshButton);
+
+        maxMomentAccForward.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                return processFloatToEnterKey(
+                        event,
+                        keyCode,
+                        maxMomentAccForward,
+                        DeviceProtocol.MAX_FORWARD_MOMENT_ACCELERATION
+                );
+            }
+        });
+
+        maxMomentAccBackward.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                return processFloatToEnterKey(
+                        event,
+                        keyCode,
+                        maxMomentAccBackward,
+                        DeviceProtocol.MAX_BACKWARD_MOMENT_ACCELERATION
+                );
+            }
+        });
 
         // input data listeners:
-
-        maxForwardAccelerationCurrent.addTextChangedListener(new TextWatcher() {
+        maxForwardAccelerationCurrent.setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (bluetoothLayer != null) {
-
-                }
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                return processFloatToEnterKey(
+                        event,
+                        keyCode,
+                        maxForwardAccelerationCurrent,
+                        DeviceProtocol.MAX_SPEED_UP_CURRENT
+                );
             }
         });
 
-        maxBrakeCurrent.addTextChangedListener(new TextWatcher() {
+        maxBrakeCurrent.setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (bluetoothLayer != null) {
-
-                }
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                return processFloatToEnterKey(
+                        event,
+                        keyCode,
+                        maxBrakeCurrent,
+                        DeviceProtocol.MAX_SPEED_DOWN_CURRENT
+                );
             }
         });
 
-        maxForwardSpeed.addTextChangedListener(new TextWatcher() {
+        maxForwardSpeed.setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (bluetoothLayer != null) {
-
-                }
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                return processFloatToEnterKey(
+                        event,
+                        keyCode,
+                        maxForwardSpeed,
+                        DeviceProtocol.MAX_FORWARD_SPEED
+                );
             }
         });
 
-        maxBackwardSpeed.addTextChangedListener(new TextWatcher() {
+        maxBackwardSpeed.setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (bluetoothLayer != null) {
-
-                }
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                return processFloatToEnterKey(
+                        event,
+                        keyCode,
+                        maxBackwardSpeed,
+                        DeviceProtocol.MAX_BACKWARD_SPEED
+                );
             }
         });
 
-        maxAccForward.addTextChangedListener(new TextWatcher() {
+        maxAccForward.setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (bluetoothLayer != null) {
-
-                }
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                return processFloatToEnterKey(
+                        event,
+                        keyCode,
+                        maxAccForward,
+                        DeviceProtocol.MAX_FORWARD_SPEED_ACCELERATION
+                );
             }
         });
 
-        maxAccBackward.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
+        maxAccBackward.setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                return processFloatToEnterKey(
+                        event,
+                        keyCode,
+                        maxAccBackward,
+                        DeviceProtocol.MAX_BACKWARD_SPEED_ACCELERATION
+                );
+            }
+        });
 
+        lightLevel.setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public void afterTextChanged(Editable s) {
-                if (bluetoothLayer != null) {
-
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    int value = Integer.parseInt(lightLevel.getText().toString());
+                    processByte(DeviceProtocol.LIGHT_LEVEL, (byte)value);
+                    return true;
                 }
+                return false;
             }
         });
 
@@ -254,42 +283,45 @@ public class SettingsFragment extends Fragment {
             }
         });
 
-        engineBrake.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+        engineBrake.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-
+            public void onClick(View v) {
+                if (engineBrake.isChecked()) {
+                    processByte(DeviceProtocol.ENGINE_BRAKE_PROHIBITED, DeviceProtocol.MODE_ON);
                 } else {
-
+                    processByte(DeviceProtocol.ENGINE_BRAKE_PROHIBITED, DeviceProtocol.MODE_OF);
                 }
             }
         });
 
-        lightAuto.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+        engineSpeedLimitAutoBrake.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-
+            public void onClick(View v) {
+                if (engineSpeedLimitAutoBrake.isChecked()) {
+                    processByte(DeviceProtocol.ENGINE_SPEED_LIMIT_BRAKE_MODE, DeviceProtocol.MODE_ON);
                 } else {
-
+                    processByte(DeviceProtocol.ENGINE_SPEED_LIMIT_BRAKE_MODE, DeviceProtocol.MODE_OF);
                 }
             }
         });
 
-        lightMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+        lightAuto.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-
+            public void onClick(View v) {
+                if (lightAuto.isChecked()) {
+                    processByte(DeviceProtocol.LIGHT_AUTO_MODE, DeviceProtocol.MODE_ON);
                 } else {
-
+                    processByte(DeviceProtocol.LIGHT_AUTO_MODE, DeviceProtocol.MODE_OF);
                 }
             }
         });
+
 
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                checkBluetoothGPS();
+
                 names.clear();
                 names.notifyDataSetChanged();
                 bluetoothLayer.startScan();
@@ -305,6 +337,18 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (dataPackages.isEnd()) {
+                    dataPackages.refresh();
+                    DataManager.SettingsFragmentRequests = true;
+                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+                }
+            }
+        });
+
+
 
         disconnectButton.setEnabled(isDisconnectButtonEnable);
         disconnectButton.setOnClickListener(new View.OnClickListener() {
@@ -316,16 +360,69 @@ public class SettingsFragment extends Fragment {
                 }
                 disconnectButton.setEnabled(false);
                 isDisconnectButtonEnable = false;
+                DataManager.SettingsFragmentRequests = false;
+                dataPackages.refresh();
             }
         });
 
         return view;
     }
 
+    private boolean processFloatToEnterKey(KeyEvent event, int keyCode, EditText editText, int command) {
+        if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+            float value = Float.parseFloat(editText.getText().toString());
+
+            byte[] to_broadcast = new byte[5];
+            to_broadcast[0] = (byte) command;
+            System.arraycopy(ByteBuffer.allocate(4).putFloat(value).array(), 0, to_broadcast, 1, 4);
+            bluetoothLayer.writeRXCharacteristic(makeRequestPackage(DeviceProtocol.WRITE_READWRITE_DWORD_COMMAND, to_broadcast));
+            return true;
+        }
+        return false;
+    }
+
+    private void processByte(int command, int value) {
+        byte[] to_broadcast = new byte[2];
+        to_broadcast[0] = (byte) command;
+        to_broadcast[1] = (byte) value;
+        bluetoothLayer.writeRXCharacteristic(makeRequestPackage(DeviceProtocol.WRITE_READWRITE_BYTE_COMMAND, to_broadcast));
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        DataManager.SettingsFragmentRequests = false;
+
+        checkBluetoothGPS();
+
+        getContext().registerReceiver(txReceiver, new IntentFilter(DeviceProtocol.TX_DATA_DETECTED));
+
+        if (((MainActivity)getActivity()).getConnectedDevice() != null) {
+
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!DataManager.SettingsFragmentRequests) {
+                        DataManager.SettingsFragmentRequests = true;
+                        DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+                    }
+                }
+            }, 300);
+
+        }
+    }
+
+
     @Override
     public void onResume() {
         super.onResume();
 
+        checkBluetoothGPS();
+    }
+
+    private void checkBluetoothGPS() {
         if (BluetoothAdapter.getDefaultAdapter() != null) {
             if (!isBluetoothEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -338,79 +435,151 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
+        DataManager.SettingsFragmentRequests = false;
         getContext().unregisterReceiver(txReceiver);
     }
 
-    /*
-    * check if given response provides error code
-    * */
-    public static boolean isErrorResponse(byte response) {
-        return response < 0;
-    }
+    private void refreshRenderedData(byte[] actualValues) {
+        DataView currentDataView = dataPackages.getSettingsFragmentDataView();
 
-    /*
-    * extract command gave error from error answer
-    * */
-    private static byte extractErrorCommand(byte response) {
-        return (byte)(response & 0x7f);
+        Log.e("Monitor", String.format("SettingsFragment refresh %s", BytesInterpret.dumpBytes(actualValues)));
+        switch (currentDataView.address) {
+            case DeviceProtocol.MAX_SPEED_UP_CURRENT: {
+                float value = BytesInterpret.toFloat(actualValues);
+                maxForwardAccelerationCurrent.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.MAX_SPEED_DOWN_CURRENT: {
+                float value = BytesInterpret.toFloat(actualValues);
+                maxBrakeCurrent.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.ENGINE_SPEED_LIMIT_BRAKE_MODE: {
+                engineSpeedLimitAutoBrake.setChecked(BytesInterpret.asOn(actualValues[1]));
+                break;
+            }
+//            case DeviceProtocol.STATE_REGISTER_1: {
+//
+//            }
+            case DeviceProtocol.MAX_FORWARD_SPEED: {
+                float value = BytesInterpret.toFloat(actualValues);
+                maxForwardSpeed.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.MAX_BACKWARD_SPEED: {
+                float value = BytesInterpret.toFloat(actualValues);
+                maxBackwardSpeed.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.MAX_FORWARD_SPEED_ACCELERATION: {
+                float value = BytesInterpret.toFloat(actualValues);
+                maxAccForward.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.MAX_BACKWARD_SPEED_ACCELERATION: {
+                float value = BytesInterpret.toFloat(actualValues);
+                maxAccBackward.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.MAX_FORWARD_MOMENT_ACCELERATION: {
+                float value = BytesInterpret.toFloat(actualValues);
+                maxMomentAccForward.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.MAX_BACKWARD_MOMENT_ACCELERATION: {
+                float value = BytesInterpret.toFloat(actualValues);
+                maxMomentAccBackward.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.LIGHT_AUTO_MODE: {
+                lightAuto.setChecked(BytesInterpret.asOn(actualValues[1]));
+                break;
+            }
+            case DeviceProtocol.LIGHT_LEVEL: {
+                int value = BytesInterpret.toInt8(actualValues[1]);
+                lightLevel.setText(String.valueOf(value));
+                break;
+            }
+            case DeviceProtocol.ENGINE_BRAKE_PROHIBITED:{
+                engineBrake.setChecked(BytesInterpret.asOn(actualValues[1]));
+                break;
+            }
+        }
     }
 
     /*
      * big switch of incoming information
      * */
     public final BroadcastReceiver txReceiver = new BroadcastReceiver() {
+        Handler handler = new Handler();
         @Override
         public void onReceive(Context context, Intent intent) {
-            byte[] value = (byte[]) intent.getSerializableExtra(DeviceInfo.TX_DATA_DETECTED_EXTRA);
+            if (DataManager.SettingsFragmentRequests) {
+                byte[] value = (byte[]) intent.getSerializableExtra(DeviceProtocol.TX_DATA_DETECTED_EXTRA);
 
-            if (isErrorResponse(value[0])) {
-                Log.e(TAG, String.format("Command 0x%h raises error 0x%h", extractErrorCommand(value[0]), value[1]));
+                Log.e(TAG, String.format("SettingsFormat receiver got %s", BytesInterpret.dumpBytes(value)));
 
-                switch (value[1]) {
-                    case DeviceInfo.WRONG_PASSWORD_ERROR: {
-                        Toast.makeText(context, "Wrong Password", Toast.LENGTH_SHORT).show();
-                        break;
+                if (isErrorResponse(value[0])) {
+                    Log.e(TAG, String.format("Command 0x%h raises error 0x%h", extractErrorCommand(value[0]), value[1]));
+
+                    switch (value[1]) {
+                        case DeviceProtocol.WRONG_PASSWORD_ERROR: {
+                            Toast.makeText(context, "Wrong Password", Toast.LENGTH_SHORT).show();
+                            break;
+                        }
+
                     }
 
+                } else {
+                    Log.e(TAG, String.format("Got valid answer 0x%h from device", value[0]));
+
+                    switch (value[0]) {
+                        case DeviceProtocol.PASS_PASSWORD_COMMAND: {
+
+                            Toast.makeText(context, "Password OK", Toast.LENGTH_SHORT).show();
+
+                            ((MainActivity) getActivity()).setConnectedDevice(connectedDevice);
+
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    DataManager.SettingsFragmentRequests = true;
+                                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+                                }
+                            }, 100);
+
+                            break;
+                        }
+
+                        default: {
+                            if (value.length > 1) {
+                                refreshRenderedData(value);
+
+                                if (!dataPackages.isEnd()) {
+                                    handler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            dataPackages.next(DataPackages.SettingsFragmentDataPackage);
+                                            DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+                                            DataManager.SettingsFragmentRequests = true;
+                                        }
+                                    }, 100);
+                                }
+                            }
+                            break;
+                        }
+                    }
                 }
 
-            } else {
-                Log.e(TAG, String.format("Got valid answer 0x%h from device", value[0]));
-
-                switch (value[0]) {
-                    case DeviceInfo.PASS_PASSWORD_COMMAND: {
-                        Toast.makeText(context, "Password OK", Toast.LENGTH_SHORT).show();
-
-                        ((MainActivity)getActivity()).setConnectedDevice(connectedDevice);
-
-                        break;
-                    }
-
-                    case DeviceInfo.NEW_PASSWORD_COMMAND: {
-                        Toast.makeText(context, "Successfully set new password", Toast.LENGTH_SHORT).show();
-
-//                        bluetoothLayer.writeRXCharacteristic(makeRequestPackage(DeviceInfo.PASS_PASSWORD_COMMAND, "111111".getBytes(StandardCharsets.UTF_8)));
-                    }
-                }
+                DataManager.SettingsFragmentRequests = false;
             }
 
         }
     };
-
-    public static byte[] makeRequestPackage(byte command, byte[] commandBody) {
-        byte[] result = new byte[1 + commandBody.length];
-        result[0] = command;
-        System.arraycopy(commandBody, 0, result, 1, commandBody.length);
-        return result;
-    }
 
     private void buildPasswordAlertDialog() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
@@ -430,9 +599,10 @@ public class SettingsFragment extends Fragment {
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         if (input.getText().toString().length() == PASSWORD_LENGTH) {
+                            DataManager.SettingsFragmentRequests = true;
                             bluetoothLayer.writeRXCharacteristic(
                                     makeRequestPackage(
-                                            DeviceInfo.PASS_PASSWORD_COMMAND,
+                                            DeviceProtocol.PASS_PASSWORD_COMMAND,
                                             input.getText().toString().getBytes(StandardCharsets.UTF_8)
                                     )
                             );

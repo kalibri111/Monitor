@@ -4,13 +4,8 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
-
-import com.welie.blessed.BluetoothPeripheral;
 
 public class DataPipeService extends Service {
 
@@ -38,7 +33,7 @@ public class DataPipeService extends Service {
                 BluetoothLayer bluetoothLayer = BluetoothLayer.getInstance(DataPipeService.this);
                 bluetoothLayer.setBoundedDevice(intent.getStringExtra("deviceMAC"));
                 while (true) {
-                    bluetoothLayer.writeRXCharacteristic(SettingsFragment.makeRequestPackage(DeviceInfo.READ_WORD_COMMAND, new byte[] {0x01}));
+                    bluetoothLayer.writeRXCharacteristic(DataManager.makeRequestPackage(DeviceProtocol.READ_WORD_COMMAND, new byte[] {0x01}));
 
                 }
             }

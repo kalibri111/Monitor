@@ -2,52 +2,28 @@ package com.example.monitor;
 
 import android.Manifest;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
-import android.os.Build;
 import android.os.Looper;
-import android.os.Parcel;
-import android.os.ParcelUuid;
-import android.os.Parcelable;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.Toast;
 import android.os.Handler;
 
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
-
-import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 
 import static com.welie.blessed.BluetoothBytesParser.bytes2String;
 
@@ -140,8 +116,8 @@ public class BluetoothLayer {
         public void onCharacteristicUpdate(@NonNull BluetoothPeripheral peripheral, @NonNull byte[] value, @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
 
             // Broadcast incoming data
-            Intent intent = new Intent(DeviceInfo.TX_DATA_DETECTED);
-            intent.putExtra(DeviceInfo.TX_DATA_DETECTED_EXTRA, value);
+            Intent intent = new Intent(DeviceProtocol.TX_DATA_DETECTED);
+            intent.putExtra(DeviceProtocol.TX_DATA_DETECTED_EXTRA, value);
             context.sendBroadcast(intent);
         }
 
@@ -179,7 +155,7 @@ public class BluetoothLayer {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                centralManager.scanForPeripheralsWithServices(new UUID[]{DeviceInfo.RX_SERVICE_UUID});
+                centralManager.scanForPeripheralsWithServices(new UUID[]{DeviceProtocol.RX_SERVICE_UUID});
             }
         }, 1000);
 
@@ -205,7 +181,7 @@ public class BluetoothLayer {
     public void enableTXNotification() {
         centralManager.stopScan();
 
-        BluetoothGattCharacteristic txCharacteristic = boundedDevice.getCharacteristic(DeviceInfo.RX_SERVICE_UUID, DeviceInfo.TX_CHAR_UUID);
+        BluetoothGattCharacteristic txCharacteristic = boundedDevice.getCharacteristic(DeviceProtocol.RX_SERVICE_UUID, DeviceProtocol.TX_CHAR_UUID);
 
         if (txCharacteristic != null) {
             boundedDevice.setNotify(txCharacteristic, true);
@@ -218,7 +194,7 @@ public class BluetoothLayer {
     public void writeRXCharacteristic(byte[] value) {
         centralManager.stopScan();
 
-        BluetoothGattCharacteristic rxCharacteristic = boundedDevice.getCharacteristic(DeviceInfo.RX_SERVICE_UUID, DeviceInfo.RX_CHAR_UUID);
+        BluetoothGattCharacteristic rxCharacteristic = boundedDevice.getCharacteristic(DeviceProtocol.RX_SERVICE_UUID, DeviceProtocol.RX_CHAR_UUID);
 
         if (rxCharacteristic != null) {
             boundedDevice.writeCharacteristic(rxCharacteristic, value, WriteType.WITH_RESPONSE);

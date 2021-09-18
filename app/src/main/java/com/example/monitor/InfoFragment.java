@@ -1,8 +1,13 @@
 package com.example.monitor;
 
+import static com.example.monitor.DataManager.extractErrorCommand;
+import static com.example.monitor.DataManager.isErrorResponse;
+import static com.example.monitor.DataManager.makeRequestPackage;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -10,25 +15,35 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentResultListener;
 
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link InfoFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import com.welie.blessed.BluetoothPeripheral;
+
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
+
+
 public class InfoFragment extends Fragment {
     private BluetoothLayer  bluetoothLayer;
-    private Runnable        requestData;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    DataPackages dataPackages = new DataPackages();
+
+    TextView commonMileageView;
+    TextView mileageView;
+    TextView batteryVoltageView;
+    TextView iecTemperatureView;
+    TextView energyConsumptionView;
+    TextView energyRemainsView;
+
+
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
 
@@ -36,15 +51,6 @@ public class InfoFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment InfoFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static InfoFragment newInstance(String param1, String param2) {
         InfoFragment fragment = new InfoFragment();
         Bundle args = new Bundle();
@@ -69,48 +75,115 @@ public class InfoFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_info, container, false);
 
-
+        commonMileageView       = view.findViewById(R.id.generalRunValue);
+        mileageView             = view.findViewById(R.id.RunValue);
+        batteryVoltageView      = view.findViewById(R.id.BatteryVoltageValue);
+        iecTemperatureView      = view.findViewById(R.id.TemperatureValue);
+        energyConsumptionView   = view.findViewById(R.id.ConsumptionValue);
+        energyRemainsView       = view.findViewById(R.id.BatEnergyValue);
 
         return view;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        getParentFragmentManager().setFragmentResultListener("device", this, new FragmentResultListener() {
-            @Override
-            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
-                String deviceAddress = result.getString("connectedDeviceMAC");
+    public void onStart() {
+        super.onStart();
 
-                bluetoothLayer = BluetoothLayer.getInstance(getContext());
-                bluetoothLayer.setBoundedDevice(deviceAddress);
+        DataManager.InfoFragmentRequests = false;
+        BluetoothPeripheral connectedFromSettingsFragment = ((MainActivity) getActivity()).getConnectedDevice();
+        getContext().registerReceiver(txReceiver, new IntentFilter(DeviceProtocol.TX_DATA_DETECTED));
+        if (connectedFromSettingsFragment != null) {
+            bluetoothLayer = BluetoothLayer.getInstance(getContext());
+            bluetoothLayer.setBoundedDevice(connectedFromSettingsFragment.getAddress());
 
-//                initial request
-                requestData = new Runnable() {
-                    @Override
-                    public void run() {
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    DataManager.InfoFragmentRequests = true;
+                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.INFO_FRAGMENT_DATA_PACKAGE);
+                }
+            }, 200);
 
-                    }
-                };
-
-                requestData.run();
-            }
-        });
+        }
     }
 
-    private void refreshRenderedData(byte[] data) {
-        // set value to textViews from data by index from DeviceInfo
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        DataManager.InfoFragmentRequests = false;
+        getContext().unregisterReceiver(txReceiver);
+    }
+
+    private void refreshRenderedData(byte[] actualValues) {
+        DataView currentDataView = dataPackages.getInfoFragmentDataView();
+        Log.e("Monitor", String.format("InfoFragment refresh %s", BytesInterpret.dumpBytes(actualValues)));
+
+            switch (currentDataView.address) {
+
+                case DeviceProtocol.MILEAGE: {
+                    float val = BytesInterpret.toFloat(actualValues); // LE BE ?
+                    mileageView.setText(String.valueOf(val));
+                    break;
+                }
+
+                case DeviceProtocol.COMMON_MILEAGE: {
+                    float val = BytesInterpret.toFloat(actualValues); // LE BE ?
+                    commonMileageView.setText(String.valueOf(val));
+                    break;
+                }
+
+                case DeviceProtocol.IEC_TEMPERATURE: {
+                    float val = BytesInterpret.toFloat(actualValues); // LE BE ?
+                    iecTemperatureView.setText(String.valueOf(val));
+                    break;
+                }
+
+                case DeviceProtocol.ENERGY_REMAINS: {
+                    float en_val = BytesInterpret.toFloat(actualValues); // LE BE ?
+                    energyRemainsView.setText(String.valueOf(en_val));
+                    break;
+                }
+
+                case DeviceProtocol.ENERGY_CONSUMPTION: {
+                    float en_co = BytesInterpret.toFloat(actualValues); // LE BE ?
+                    energyConsumptionView.setText(String.valueOf(en_co));
+                    break;
+                }
+
+                case DeviceProtocol.BUTTERY_VOLTAGE: {
+                    float value = BytesInterpret.asFloat(actualValues);
+                    batteryVoltageView.setText(String.valueOf(value));
+                    break;
+                }
+            }
     }
 
     private final BroadcastReceiver txReceiver = new BroadcastReceiver() {
         Handler handler = new Handler();
         @Override
         public void onReceive(Context context, Intent intent) {
-            byte[] value = (byte[]) intent.getSerializableExtra(DeviceInfo.TX_DATA_DETECTED_EXTRA);
+            if (DataManager.InfoFragmentRequests) {
+                byte[] value = (byte[]) intent.getSerializableExtra(DeviceProtocol.TX_DATA_DETECTED_EXTRA);
+                if (isErrorResponse(value[0])) {
+                    Log.e("Monitor", String.format("Command 0x%h raises error 0x%h", extractErrorCommand(value[0]), value[1]));
+                } else {
+                    refreshRenderedData(value);
 
-            if (value[0] == DeviceInfo.READ_SPECIFIC_DATA_GROUP) {
-                refreshRenderedData(value);
-                handler.postDelayed(requestData, 100);
+                    // get next value
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            dataPackages.next(DataPackages.InfoFragmentDataPackage);
+
+                            DataManager.InfoFragmentRequests = true;
+                            DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.INFO_FRAGMENT_DATA_PACKAGE);
+                        }
+                    }, 100);
+                }
+
+                DataManager.InfoFragmentRequests = false;
             }
         }
     };

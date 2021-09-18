@@ -7,52 +7,64 @@ import java.util.List;
 
 public class DataPackages {
     public static final List<DataView> MainFragmentDataPackage = Arrays.asList(
-            new DataView(DeviceInfo.SPEED,              DeviceInfo.SPEED_SIZE           , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.CURRENT,            DeviceInfo.CURRENT_SIZE         , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.MILEAGE,            DeviceInfo.MILEAGE_SIZE         , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.COMMON_MILEAGE,     DeviceInfo.COMMON_MILEAGE_SIZE  , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.IEC_TEMPERATURE,    DeviceInfo.IEC_TEMPERATURE_SIZE , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.STATE_REGISTER_1,   DeviceInfo.STATE_REGISTER_1_SIZE, DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.ENERGY_REMAINS,     DeviceInfo.ENERGY_REMAINS_SIZE  , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.ABS_ASR_MODE,       DeviceInfo.ABS_ASR_MODE_SIZE    , DeviceInfo.READ_WRITE_TABLE)
+            new DataView(DeviceProtocol.SPEED,              DeviceProtocol.SPEED_SIZE           , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.CURRENT,            DeviceProtocol.CURRENT_SIZE         , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.MILEAGE,            DeviceProtocol.MILEAGE_SIZE         , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.COMMON_MILEAGE,     DeviceProtocol.COMMON_MILEAGE_SIZE  , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.IEC_TEMPERATURE,    DeviceProtocol.IEC_TEMPERATURE_SIZE , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.STATE_REGISTER_1,   DeviceProtocol.STATE_REGISTER_1_SIZE, DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.ENERGY_REMAINS,     DeviceProtocol.ENERGY_REMAINS_SIZE  , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.ABS_ASR_MODE,       DeviceProtocol.ABS_ASR_MODE_SIZE    , DeviceProtocol.READ_WRITE_TABLE)
     );
 
     public static final List<DataView> SettingsFragmentDataPackage = Arrays.asList(
-            new DataView(DeviceInfo.MAX_SPEED_UP_CURRENT            , DeviceInfo.MAX_SPEED_UP_CURRENT_SIZE              , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.MAX_SPEED_DOWN_CURRENT          , DeviceInfo.MAX_SPEED_DOWN_CURRENT_SIZE            , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.ENGINE_SPEED_LIMIT_BRAKE_MODE   , DeviceInfo.ENGINE_SPEED_LIMIT_BRAKE_MODE_SIZE     , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.STATE_REGISTER_1                , DeviceInfo.STATE_REGISTER_1_SIZE                  , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.MAX_FORWARD_SPEED               , DeviceInfo.MAX_FORWARD_SPEED_SIZE                 , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.MAX_BACKWARD_SPEED              , DeviceInfo.MAX_BACKWARD_SPEED_SIZE                , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.MAX_FORWARD_SPEED_ACCELERATION  , DeviceInfo.MAX_FORWARD_SPEED_ACCELERATION_SIZE    , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.MAX_BACKWARD_SPEED_ACCELERATION , DeviceInfo.MAX_BACKWARD_SPEED_ACCELERATION_SIZE   , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.MAX_FORWARD_MOMENT_ACCELERATION , DeviceInfo.MAX_FORWARD_MOMENT_ACCELERATION_SIZE   , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.MAX_BACKWARD_MOMENT_ACCELERATION, DeviceInfo.MAX_BACKWARD_MOMENT_ACCELERATION_SIZE  , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.LIGHT_AUTO_MODE                 , DeviceInfo.LIGHT_AUTO_MODE_SIZE                   , DeviceInfo.READ_WRITE_TABLE),
-            new DataView(DeviceInfo.LIGHT_LEVEL                     , DeviceInfo.LIGHT_LEVEL_SIZE                       , DeviceInfo.READ_WRITE_TABLE)
+            new DataView(DeviceProtocol.MAX_SPEED_UP_CURRENT            , DeviceProtocol.MAX_SPEED_UP_CURRENT_SIZE              , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.MAX_SPEED_DOWN_CURRENT          , DeviceProtocol.MAX_SPEED_DOWN_CURRENT_SIZE            , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.ENGINE_SPEED_LIMIT_BRAKE_MODE   , DeviceProtocol.ENGINE_SPEED_LIMIT_BRAKE_MODE_SIZE     , DeviceProtocol.READ_WRITE_TABLE),
+//            new DataView(DeviceProtocol.STATE_REGISTER_1                , DeviceProtocol.STATE_REGISTER_1_SIZE                  , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.MAX_FORWARD_SPEED               , DeviceProtocol.MAX_FORWARD_SPEED_SIZE                 , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.MAX_BACKWARD_SPEED              , DeviceProtocol.MAX_BACKWARD_SPEED_SIZE                , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.MAX_FORWARD_SPEED_ACCELERATION  , DeviceProtocol.MAX_FORWARD_SPEED_ACCELERATION_SIZE    , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.MAX_BACKWARD_SPEED_ACCELERATION , DeviceProtocol.MAX_BACKWARD_SPEED_ACCELERATION_SIZE   , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.MAX_FORWARD_MOMENT_ACCELERATION , DeviceProtocol.MAX_FORWARD_MOMENT_ACCELERATION_SIZE   , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.MAX_BACKWARD_MOMENT_ACCELERATION, DeviceProtocol.MAX_BACKWARD_MOMENT_ACCELERATION_SIZE  , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.LIGHT_AUTO_MODE                 , DeviceProtocol.LIGHT_AUTO_MODE_SIZE                   , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.LIGHT_LEVEL                     , DeviceProtocol.LIGHT_LEVEL_SIZE                       , DeviceProtocol.READ_WRITE_TABLE),
+            new DataView(DeviceProtocol.ENGINE_BRAKE_PROHIBITED         , DeviceProtocol.ENGINE_BRAKE_PROHIBITED_SIZE           , DeviceProtocol.READ_WRITE_TABLE)
     );
 
     public static final List<DataView> InfoFragmentDataPackage = Arrays.asList(
-            new DataView(DeviceInfo.COMMON_MILEAGE      , DeviceInfo.COMMON_MILEAGE_SIZE    , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.MILEAGE             , DeviceInfo.MILEAGE_SIZE           , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.BUTTERY_VOLTAGE     , DeviceInfo.BUTTERY_VOLTAGE_SIZE   , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.IEC_TEMPERATURE     , DeviceInfo.IEC_TEMPERATURE_SIZE   , DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.ENERGY_CONSUMPTION  , DeviceInfo.ENERGY_CONSUMPTION_SIZE, DeviceInfo.READ_TABLE),
-            new DataView(DeviceInfo.ENERGY_REMAINS      , DeviceInfo.ENERGY_REMAINS_SIZE    , DeviceInfo.READ_TABLE)
+            new DataView(DeviceProtocol.COMMON_MILEAGE      , DeviceProtocol.COMMON_MILEAGE_SIZE    , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.MILEAGE             , DeviceProtocol.MILEAGE_SIZE           , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.BUTTERY_VOLTAGE     , DeviceProtocol.BUTTERY_VOLTAGE_SIZE   , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.IEC_TEMPERATURE     , DeviceProtocol.IEC_TEMPERATURE_SIZE   , DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.ENERGY_CONSUMPTION  , DeviceProtocol.ENERGY_CONSUMPTION_SIZE, DeviceProtocol.READ_TABLE),
+            new DataView(DeviceProtocol.ENERGY_REMAINS      , DeviceProtocol.ENERGY_REMAINS_SIZE    , DeviceProtocol.READ_TABLE)
     );
 
     private int current;
+    private boolean end = false;
 
     public DataPackages() {
         this.current = 0;
     }
 
     public void next(@NonNull List<DataView> dataViews) {
-        if (current < dataViews.size()) {
+        if (current < dataViews.size() - 1) {
             current += 1;
         } else {
             current = 0;
+            end = true;
         }
+    }
+
+    public boolean isEnd() {
+        return end;
+    }
+
+    public void refresh() {
+        this.end = false;
+        this.current = 0;
     }
 
     public DataView getMainFragmentDataView() {

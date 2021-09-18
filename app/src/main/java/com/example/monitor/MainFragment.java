@@ -2,7 +2,6 @@ package com.example.monitor;
 
 import static com.example.monitor.DataManager.extractErrorCommand;
 import static com.example.monitor.DataManager.isErrorResponse;
-import static com.example.monitor.DataManager.makeRequestPackage;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,6 +25,8 @@ import com.github.anastr.speedviewlib.AwesomeSpeedometer;
 import com.github.anastr.speedviewlib.PointerSpeedometer;
 import com.welie.blessed.BluetoothPeripheral;
 
+import java.util.Arrays;
+
 
 public class MainFragment extends Fragment {
 
@@ -42,6 +43,7 @@ public class MainFragment extends Fragment {
     BluetoothLayer bluetoothLayer = null;
 
     DataPackages dataPackages = new DataPackages();  // указатель на текущий элемент интерфейса
+    OptimizedRequest optimizedRequest = null;
 
     private boolean firstStart = true;
 
@@ -122,7 +124,9 @@ public class MainFragment extends Fragment {
                 @Override
                 public void run() {
                     DataManager.MainFragmentRequests = true;
-                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.MAIN_FRAGMENT_DATA_PACKAGE);
+                    optimizedRequest = new OptimizedRequest(dataPackages, DataPackages.MainFragmentDataPackage);
+                    DataManager.requestOptimized(optimizedRequest, bluetoothLayer, DataPackageType.MAIN_FRAGMENT_DATA_PACKAGE);
+//                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.MAIN_FRAGMENT_DATA_PACKAGE);
                 }
             }, 200);
 
@@ -174,9 +178,7 @@ public class MainFragment extends Fragment {
      *
      * @param actualValues новое значение для элемента интерфейса
      */
-    private void refreshRenderedData(byte[] actualValues) {
-
-        DataView currentDataView = dataPackages.getMainFragmentDataView();
+    private void refreshRenderedData(byte[] actualValues, DataView currentDataView) {
 
         Log.e("Monitor", String.format("MainFragment refresh %s", BytesInterpret.dumpBytes(actualValues)));
 
@@ -286,6 +288,17 @@ public class MainFragment extends Fragment {
         }
     }
 
+    private void refreshRenderedDataGroup(byte[] values) {
+        int index_values_start = 2;
+        for (int i = 0; i < optimizedRequest.getBufferForRequest().size(); i++) {
+            refreshRenderedData(
+                    Arrays.copyOfRange(values, index_values_start - 1, index_values_start + optimizedRequest.getBufferForRequest().get(i).size),
+                    optimizedRequest.getBufferForRequest().get(i)
+            );
+            index_values_start += optimizedRequest.getBufferForRequest().get(i).size;
+        }
+    }
+
     private final BroadcastReceiver txReceiver = new BroadcastReceiver() {
         Handler handler = new Handler();
         @Override
@@ -298,15 +311,18 @@ public class MainFragment extends Fragment {
 
                 } else {
 
-                    refreshRenderedData(value);
+//                    refreshRenderedData(value);
+                    refreshRenderedDataGroup(value);
 
                     // get next value
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            dataPackages.next(DataPackages.MainFragmentDataPackage);
+//                            dataPackages.next(DataPackages.MainFragmentDataPackage);
                             DataManager.MainFragmentRequests = true;
-                            DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.MAIN_FRAGMENT_DATA_PACKAGE);
+                            optimizedRequest = new OptimizedRequest(dataPackages, DataPackages.MainFragmentDataPackage);
+                            DataManager.requestOptimized(optimizedRequest, bluetoothLayer, DataPackageType.MAIN_FRAGMENT_DATA_PACKAGE);
+//                            DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.MAIN_FRAGMENT_DATA_PACKAGE);
                         }
 
                     }, 100);

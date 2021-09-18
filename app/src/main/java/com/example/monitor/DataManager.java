@@ -26,6 +26,12 @@ public class DataManager {
 
         }
 
+        requestSingleDataView(currentDataView, bluetoothLayer, datapack);
+    }
+
+    public static void requestSingleDataView(DataView currentDataView, BluetoothLayer bluetoothLayer, DataPackageType datapack) {
+
+
         assert currentDataView != null;
 
         if (currentDataView.table == DeviceProtocol.READ_TABLE) {
@@ -73,6 +79,38 @@ public class DataManager {
             }
 
         }
+    }
+
+    public static void requestOptimized(OptimizedRequest request, BluetoothLayer bluetoothLayer, DataPackageType datapack) {
+        int table = request.getBufferForRequest().get(0).table;
+        byte command = (byte) request.getBufferForRequest().get(0).address;
+
+        if (request.getBufferForRequest().size() > 1) {  // request as group
+
+            if (table == DeviceProtocol.READ_TABLE) {
+
+                bluetoothLayer.writeRXCharacteristic(
+                        makeRequestPackage(
+                                DeviceProtocol.READ_READTABLE_DATA_GROUP,
+                                new byte[]{(byte) request.getBufferForRequest().size(), command}
+                        )
+                );
+
+            } else if (table == DeviceProtocol.READ_WRITE_TABLE) {
+
+                bluetoothLayer.writeRXCharacteristic(
+                        makeRequestPackage(
+                                DeviceProtocol.READ_READWRITETABLE_DATA_GROUP,
+                                new byte[]{(byte) request.getBufferForRequest().size(), command}
+                        )
+                );
+
+            }
+
+        } else {  // request as single
+            requestSingleDataView(request.getBufferForRequest().get(0), bluetoothLayer, datapack);
+        }
+
     }
 
     private static void readCommand(BluetoothLayer bluetoothLayer, byte command, int address) {

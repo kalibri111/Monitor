@@ -2,7 +2,6 @@ package com.example.monitor;
 
 import static com.example.monitor.DataManager.extractErrorCommand;
 import static com.example.monitor.DataManager.isErrorResponse;
-import static com.example.monitor.DataManager.makeRequestPackage;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,9 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentResultListener;
 
 import android.os.Handler;
 import android.util.Log;
@@ -20,18 +17,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.welie.blessed.BluetoothPeripheral;
 
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 
 public class InfoFragment extends Fragment {
     private BluetoothLayer  bluetoothLayer;
 
     DataPackages dataPackages = new DataPackages();
+    OptimizedRequest optimizedRequest = null;
 
     TextView commonMileageView;
     TextView mileageView;
@@ -101,7 +97,9 @@ public class InfoFragment extends Fragment {
                 @Override
                 public void run() {
                     DataManager.InfoFragmentRequests = true;
-                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.INFO_FRAGMENT_DATA_PACKAGE);
+                    optimizedRequest = new OptimizedRequest(dataPackages, DataPackages.InfoFragmentDataPackage);
+                    DataManager.requestOptimized(optimizedRequest, bluetoothLayer, DataPackageType.INFO_FRAGMENT_DATA_PACKAGE);
+//                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.INFO_FRAGMENT_DATA_PACKAGE);
                 }
             }, 200);
 
@@ -116,8 +114,8 @@ public class InfoFragment extends Fragment {
         getContext().unregisterReceiver(txReceiver);
     }
 
-    private void refreshRenderedData(byte[] actualValues) {
-        DataView currentDataView = dataPackages.getInfoFragmentDataView();
+    private void refreshRenderedData(byte[] actualValues, DataView currentDataView) {
+//        DataView currentDataView = dataPackages.getInfoFragmentDataView();
         Log.e("Monitor", String.format("InfoFragment refresh %s", BytesInterpret.dumpBytes(actualValues)));
 
             switch (currentDataView.address) {
@@ -160,6 +158,17 @@ public class InfoFragment extends Fragment {
             }
     }
 
+    private void refreshRenderedDataGroup(byte[] values) {
+        int index_values_start = 2;
+        for (int i = 0; i < optimizedRequest.getBufferForRequest().size(); i++) {
+            refreshRenderedData(
+                    Arrays.copyOfRange(values, index_values_start - 1, index_values_start + optimizedRequest.getBufferForRequest().get(i).size),
+                    optimizedRequest.getBufferForRequest().get(i)
+            );
+            index_values_start += optimizedRequest.getBufferForRequest().get(i).size;
+        }
+    }
+
     private final BroadcastReceiver txReceiver = new BroadcastReceiver() {
         Handler handler = new Handler();
         @Override
@@ -169,16 +178,18 @@ public class InfoFragment extends Fragment {
                 if (isErrorResponse(value[0])) {
                     Log.e("Monitor", String.format("Command 0x%h raises error 0x%h", extractErrorCommand(value[0]), value[1]));
                 } else {
-                    refreshRenderedData(value);
+                    refreshRenderedDataGroup(value);
 
                     // get next value
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            dataPackages.next(DataPackages.InfoFragmentDataPackage);
+//                            dataPackages.next(DataPackages.InfoFragmentDataPackage);
 
                             DataManager.InfoFragmentRequests = true;
-                            DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.INFO_FRAGMENT_DATA_PACKAGE);
+                            optimizedRequest = new OptimizedRequest(dataPackages, DataPackages.InfoFragmentDataPackage);
+                            DataManager.requestOptimized(optimizedRequest, bluetoothLayer, DataPackageType.INFO_FRAGMENT_DATA_PACKAGE);
+//                            DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.INFO_FRAGMENT_DATA_PACKAGE);
                         }
                     }, 100);
                 }

@@ -28,13 +28,11 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -45,6 +43,7 @@ import com.welie.blessed.BluetoothPeripheral;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -66,6 +65,7 @@ public class SettingsFragment extends Fragment {
     private static final int PASSWORD_LENGTH = 6;
 
     private DataPackages dataPackages = new DataPackages();
+    OptimizedRequest optimizedRequest = null;
 
     ArrayAdapter<String> names = null;
 
@@ -343,7 +343,9 @@ public class SettingsFragment extends Fragment {
                 if (dataPackages.isEnd()) {
                     dataPackages.refresh();
                     DataManager.SettingsFragmentRequests = true;
-                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+                    optimizedRequest = new OptimizedRequest(dataPackages, DataPackages.SettingsFragmentDataPackage);
+                    DataManager.requestOptimized(optimizedRequest, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+//                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
                 }
             }
         });
@@ -406,7 +408,9 @@ public class SettingsFragment extends Fragment {
                 public void run() {
                     if (!DataManager.SettingsFragmentRequests) {
                         DataManager.SettingsFragmentRequests = true;
-                        DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+                        optimizedRequest = new OptimizedRequest(dataPackages, DataPackages.SettingsFragmentDataPackage);
+                        DataManager.requestOptimized(optimizedRequest, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+//                        DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
                     }
                 }
             }, 300);
@@ -443,8 +447,8 @@ public class SettingsFragment extends Fragment {
         getContext().unregisterReceiver(txReceiver);
     }
 
-    private void refreshRenderedData(byte[] actualValues) {
-        DataView currentDataView = dataPackages.getSettingsFragmentDataView();
+    private void refreshRenderedData(byte[] actualValues, DataView currentDataView) {
+//        DataView currentDataView = dataPackages.getSettingsFragmentDataView();
 
         Log.e("Monitor", String.format("SettingsFragment refresh %s", BytesInterpret.dumpBytes(actualValues)));
         switch (currentDataView.address) {
@@ -511,6 +515,17 @@ public class SettingsFragment extends Fragment {
         }
     }
 
+    private void refreshRenderedDataGroup(byte[] values) {
+        int index_values_start = 2;
+        for (int i = 0; i < optimizedRequest.getBufferForRequest().size(); i++) {
+            refreshRenderedData(
+                    Arrays.copyOfRange(values, index_values_start - 1, index_values_start + optimizedRequest.getBufferForRequest().get(i).size),
+                    optimizedRequest.getBufferForRequest().get(i)
+            );
+            index_values_start += optimizedRequest.getBufferForRequest().get(i).size;
+        }
+    }
+
     /*
      * big switch of incoming information
      * */
@@ -548,7 +563,9 @@ public class SettingsFragment extends Fragment {
                                 @Override
                                 public void run() {
                                     DataManager.SettingsFragmentRequests = true;
-                                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+                                    optimizedRequest = new OptimizedRequest(dataPackages, DataPackages.SettingsFragmentDataPackage);
+                                    DataManager.requestOptimized(optimizedRequest, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+//                                    DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
                                 }
                             }, 100);
 
@@ -557,14 +574,17 @@ public class SettingsFragment extends Fragment {
 
                         default: {
                             if (value.length > 1) {
-                                refreshRenderedData(value);
+                                refreshRenderedDataGroup(value);
+//                                refreshRenderedData(value);
 
                                 if (!dataPackages.isEnd()) {
                                     handler.postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
-                                            dataPackages.next(DataPackages.SettingsFragmentDataPackage);
-                                            DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+                                            optimizedRequest = new OptimizedRequest(dataPackages, DataPackages.SettingsFragmentDataPackage);
+                                            DataManager.requestOptimized(optimizedRequest, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
+//                                            dataPackages.next(DataPackages.SettingsFragmentDataPackage);
+//                                            DataManager.requestDataView(dataPackages, bluetoothLayer, DataPackageType.SETTINGS_FRAGMENT_DATA_PACKAGE);
                                             DataManager.SettingsFragmentRequests = true;
                                         }
                                     }, 100);

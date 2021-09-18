@@ -1,8 +1,13 @@
 package com.example.monitor;
 
+import android.os.Build;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class DataPackages {
@@ -47,6 +52,34 @@ public class DataPackages {
 
     public DataPackages() {
         this.current = 0;
+        Collections.sort(MainFragmentDataPackage, new Comparator<DataView>() {
+            @Override
+            public int compare(DataView o1, DataView o2) {
+                return o1.address - o2.address;
+            }
+        });
+
+        Collections.sort(SettingsFragmentDataPackage, new Comparator<DataView>() {
+            @Override
+            public int compare(DataView o1, DataView o2) {
+                return o1.address - o2.address;
+            }
+        });
+
+        Collections.sort(InfoFragmentDataPackage, new Comparator<DataView>() {
+            @Override
+            public int compare(DataView o1, DataView o2) {
+                return o1.address - o2.address;
+            }
+        });
+    }
+
+    public int getCurrent() {
+        return current;
+    }
+
+    public void setCurrent(int current) {
+        this.current = current;
     }
 
     public void next(@NonNull List<DataView> dataViews) {
